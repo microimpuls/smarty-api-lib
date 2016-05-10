@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 import json
 import urlparse
-import requests
 import hashlib
 import base64
+import urllib2
+import urllib
 
-import urllib2, urllib
 
 class BillingAPIException(Exception):
     pass
+
 
 class SmartyBillingAPI(object):
     def __init__(self, base_url, client_id, api_key):
@@ -48,7 +49,7 @@ class SmartyBillingAPI(object):
         response = urllib2.urlopen(req)
         api_response = json.loads(response.read())
         if api_response['error']:
-            error_message = "Api Error %(error)s: %(error_message)s" % api_response 
+            error_message = "Api Error %(error)s: %(error_message)s" % api_response
             raise BillingAPIException(error_message)
         return api_response
 
@@ -75,19 +76,23 @@ class SmartyBillingAPI(object):
         fields = [
             'firstname', 'middlename', 'lastname', 'birthdate',
             'passport_number', 'passport_series', 'passport_issue_date', 'passport_issued_by',
-            'postal_address_street', 'postal_address_bld', 'postal_address_apt', 'postal_address_zip',
-            'billing_address_street', 'billing_address_bld', 'billing_address_apt', 'billing_address_zip',
-            'mobile_phone_number', 'phone_number_1', 'phone_number_2', 'fax_phone_number', 'email', 'company_name',
-            'comment',
-            'auto_activation_period',
+            'postal_address_street', 'postal_address_bld', 'postal_address_apt',
+            'postal_address_zip', 'billing_address_street', 'billing_address_bld',
+            'billing_address_apt', 'billing_address_zip',
+            'mobile_phone_number', 'phone_number_1', 'phone_number_2', 'fax_phone_number',
+            'email', 'company_name', 'comment', 'auto_activation_period',
         ]
 
         for key, value in kwargs.items():
             if key in fields:
                 params[key] = value
+
         required_fields = ['firstname', 'lastname', 'middlename', 'comment']
+
         if not any(i in params.keys() for i in required_fields):
-            raise BillingAPIException("You must specify firstname or lastname or middlename or comment")
+            raise BillingAPIException(
+                "You must specify firstname or lastname or middlename or comment"
+            )
         return self._api_request('/billing/api/customer/create/', params)
 
     def customer_info(self, customer_id):
@@ -138,7 +143,6 @@ class SmartyBillingAPI(object):
 
     def tariff_list(self, abonement):
         return self._api_request('/billing/api/tariff/list/')
-
 
 
 # api = SmartyBillingAPI(base_url='http://localhost:8000/', client_id=1, api_key=u'top secret')
