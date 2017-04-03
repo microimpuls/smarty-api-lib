@@ -114,6 +114,15 @@ class SmartyBillingAPI(object):
             'tariff_id': tariff_id
         }
         return self._api_request('/billing/api/customer/tariff/remove/', params)
+    
+    def account_info(self, abonement=None, account_id=None):
+        assert any([abonement, account_id])
+        params = {}
+        if abonement:
+            params.update(abonement=abonement)
+        if account_id:
+            params.update(account_id=account_id)
+        return self._api_request('/billing/api/account/info/', params)
 
     def account_create(self, customer_id, auto_activation_period=None):
         params = {
