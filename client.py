@@ -53,13 +53,14 @@ class SmartyBillingAPI(object):
             raise BillingAPIException(error_message)
         return api_response
 
-    def transaction_create(self, customer_id, transaction_id, amount=0, comment=''):
+    def transaction_create(self, customer_id, transaction_id, amount=0, comment='', **kwargs):
         params = {
             'customer_id': customer_id,
             'id': transaction_id,
             'amount': amount,
             'comment': comment
         }
+        params.update(**kwargs)
         return self._api_request('/billing/api/transaction/create/', params)
 
     def transaction_delete(self, customer_id, transaction_id):
