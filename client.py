@@ -151,7 +151,7 @@ class SmartyBillingAPI(object):
         }
         return self._api_request('/billing/api/account/deactivate/', params)
 
-    def tariff_list(self, abonement):
+    def tariff_list(self):
         return self._api_request('/billing/api/tariff/list/')
 
 
