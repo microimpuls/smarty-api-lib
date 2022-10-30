@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 import json
-import urlparse
+import urllib.parse
 import hashlib
 import base64
-import urllib2
+import urllib.request
+import urllib.error
 import urllib
 
 
@@ -35,8 +36,8 @@ class SmartyBillingAPI(object):
         return signature
 
     def _get_full_url(self, path):
-        parsed_base_url = urlparse.urlparse(self.base_url)
-        full_url = urlparse.urlunparse(parsed_base_url._replace(path=path))
+        parsed_base_url = urllib.parse.urlparse(self.base_url)
+        full_url = urllib.parse.urlunparse(parsed_base_url._replace(path=path))
         return full_url
 
     def _api_request(self, path, data=None):
@@ -44,9 +45,9 @@ class SmartyBillingAPI(object):
         data = data or {}
         data['client_id'] = self.client_id
         data['signature'] = self._get_signature(data)
-        encoded_post_data = urllib.urlencode(data)
-        req = urllib2.Request(url, encoded_post_data)
-        response = urllib2.urlopen(req)
+        encoded_post_data = urllib.parse.urlencode(data).encode()
+        req = urllib.request.Request(url, encoded_post_data)
+        response = urllib.request.urlopen(req)
         api_response = json.loads(response.read())
         if api_response['error']:
             error_message = "Api Error %(error)s: %(error_message)s" % api_response
@@ -155,11 +156,11 @@ class SmartyBillingAPI(object):
         return self._api_request('/billing/api/tariff/list/')
 
 
-# api = SmartyBillingAPI(base_url='http://localhost:8000/', client_id=1, api_key=u'top secret')
+# api = SmartyBillingAPI(base_url='http://localhost:8000/', client_id=1, api_key='top secret')
 # api.tariff_list()
-# api.customer_create(
+# print(api.customer_create(
 #     firstname='Bill',
 #     middlename='Muriel',
 #     auto_activation_period=10
-# )
-# api.transaction_create(customer_id=1, transaction_id=1, amount=50)
+# ))
+# api.transaction_create(customer_id=1, transaction_id=4, processed=1, amount=50)
