@@ -54,6 +54,12 @@ class SmartyContentAPI(object):
             raise ContentAPIException(error_message)
         return api_response
 
+    @staticmethod
+    def _set_params(params, fields, kwargs):
+        for key, value in kwargs.items():
+            if key in fields:
+                params[key] = value
+
 # VIDEO
     def video_create(self, name, rating, **kwargs):
         params = {
@@ -74,11 +80,7 @@ class SmartyContentAPI(object):
             'imdb_rating', 'average_customers_rating', 'duration', 'parent_control', 
             'is_announcement'
         ]
-
-        for key, value in kwargs.items():
-            if key in fields:
-                params[key] = value
-
+        self._set_params(params, fields, kwargs)
         return self._api_request('/content/api/video/create/', params)
 
     def videofile_create(self, name, vid, **kwargs):
@@ -92,10 +94,7 @@ class SmartyContentAPI(object):
             'quality'
         ]
 
-        for key, value in kwargs.items():
-            if key in fields:
-                params[key] = value
-
+        self._set_params(params, fields, kwargs)
         return self._api_request('/content/api/video/file/create/', params)
 
     def video_delete(self, id):
@@ -114,10 +113,7 @@ class SmartyContentAPI(object):
             'year', 'poster_url', 'screenshot_url', 'actors_set', 'genres_kinopoisk', 
             'kinopoisk_rating', 'imdb_rating', 'rating', 'duration'
         ]
-        for key, value in kwargs.items():
-            if key in fields:
-                params[key] = value
-
+        self._set_params(params, fields, kwargs)
         return self._api_request('/content/api/video/modify/', params)
 
     def videofile_modify(self, id, **kwargs):
@@ -126,10 +122,7 @@ class SmartyContentAPI(object):
             'name', 'name_lang1', 'name_lang2', 'name_lang3', 'name_lang4', 
             'name_lang5', 'filename', 'is_trailer', 'duration', 'episode_id', 'quality'
         ]
-        for key, value in kwargs.items():
-            if key in fields:
-                params[key] = value
-
+        self._set_params(params, fields, kwargs)
         return self._api_request('/content/api/video/file/modify/', params)
 
 # SEASON
@@ -143,10 +136,7 @@ class SmartyContentAPI(object):
             'name_lang4', 'name_lang5', 'sort_after_sid'
         ]
 
-        for key, value in kwargs.items():
-            if key in fields:
-                params[key] = value
-
+        self._set_params(params, fields, kwargs)
         return self._api_request('/content/api/season/create/', params)
 
     def season_delete(self, id):
@@ -162,10 +152,7 @@ class SmartyContentAPI(object):
             'name_lang4', 'name_lang5', 'sort_after_sid'
         ]
 
-        for key, value in kwargs.items():
-            if key in fields:
-                params[key] = value
-
+        self._set_params(params, fields, kwargs)
         return self._api_request('/content/api/season/modify/', params)
 
 # EPISODE
@@ -181,10 +168,7 @@ class SmartyContentAPI(object):
             'sort_after_eid'
         ]
 
-        for key, value in kwargs.items():
-            if key in fields:
-                params[key] = value
-
+        self._set_params(params, fields, kwargs)
         return self._api_request('/content/api/episode/create/', params)
 
     def episode_delete(self, id):
@@ -202,10 +186,7 @@ class SmartyContentAPI(object):
             'sort_after_eid'
         ]
 
-        for key, value in kwargs.items():
-            if key in fields:
-                params[key] = value
-
+        self._set_params(params, fields, kwargs)
         return self._api_request('/content/api/episode/modify/', params)
 
 # CHANNEL
@@ -228,10 +209,7 @@ class SmartyContentAPI(object):
             'stream_services', 'hbb_providers'
         ]
 
-        for key, value in kwargs.items():
-            if key in fields:
-                params[key] = value
-
+        self._set_params(params, fields, kwargs)
         return self._api_request('/content/api/channel/create/', params)
 
     def channel_delete(self, id):
@@ -248,10 +226,7 @@ class SmartyContentAPI(object):
             'vfid', 'date_end'
         ]
 
-        for key, value in kwargs.items():
-            if key in fields:
-                params[key] = value
-
+        self._set_params(params, fields, kwargs)
         return self._api_request('/content/api/seance/create/', params)
 
     def seance_delete(self, id):
@@ -261,9 +236,7 @@ class SmartyContentAPI(object):
     def seance_ticket_create(self, sid, **kwargs):
         params = {'sid': sid}
         fields = ['code']
-        for key, value in kwargs.items():
-            if key in fields:
-                params[key] = value
+        self._set_params(params, fields, kwargs)
         return self._api_request('/content/api/seance/ticket/create/', params)
 
     def seance_ticket_delete(self, id):
@@ -280,10 +253,7 @@ class SmartyContentAPI(object):
             'description_lang5', 'radio_channel'
         ]
 
-        for key, value in kwargs.items():
-            if key in fields:
-                params[key] = value
-
+        self._set_params(params, fields, kwargs)
         return self._api_request('/content/api/radio/create/', params)
 
     def radio_delete(self, id):
@@ -310,10 +280,7 @@ class SmartyContentAPI(object):
             'multicast_address', 'secondary_multicast_address', 'id_for_stream_service', 
             'comment', 'option1', 'option2', 'option3'
         ]
-        for key, value in kwargs.items():
-            if key in fields:
-                params[key] = value
-
+        self._set_params(params, fields, kwargs)
         return self._api_request('/content/api/camera/create/', params)
 
     def camera_modify(self, camera_id, **kwargs):
@@ -323,10 +290,7 @@ class SmartyContentAPI(object):
             'name_lang5', 'enabled', 'tariffs', 'stream_services', 'uri', 
             'url_prefix', 'multicast_address', 'price_category'
         ]
-        for key, value in kwargs.items():
-            if key in fields:
-                params[key] = value
-
+        self._set_params(params, fields, kwargs)
         return self._api_request('/content/api/camera/modify/', params)
 
     def camera_delete(self, id):
@@ -345,9 +309,7 @@ class SmartyContentAPI(object):
             'biography_lang2', 'biography_lang3', 'biography_lang4', 'biography_lang5', 
             'name_orig', 'movie_db_id'
         ]
-        for key, value in kwargs.items():
-            if key in fields:
-                params[key] = value
+        self._set_params(params, fields, kwargs)
         return self._api_request('/content/api/actor/create/', params)
 
     def actor_delete(self, id):
@@ -356,8 +318,8 @@ class SmartyContentAPI(object):
 
 
 
-api = SmartyContentAPI(base_url='http://176.28.64.92/', client_id=1, api_key='billing_api_key')
-#print(api.video_create('baruto', 0, kinopoisk_rating=10))
+api = SmartyContentAPI(base_url='http://smarty.example.com/', client_id=1, api_key='top secret')
+#print(api.video_create('baruto_6', 0, kinopoisk_rating=10, year=2022))
 #print(api.season_create('season3', '316225', sort_after_sid=13093))
 #print(api.episode_create(316225, '1', season_id=13093))
 #print(api.videofile_create('file_1', 316225, episode_id=254950))
