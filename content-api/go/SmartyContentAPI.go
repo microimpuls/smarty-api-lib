@@ -290,18 +290,6 @@ func Radio_delete(id int) string {
 	return _api_request("/content/api/radio/delete/", params)
 }
 
-/*
-#EPGPROGRAM
-#???
-func epg_program_time_specify(external_id, start, stop):
-	params := map[string]interface{}{
-		"external_id": external_id,
-		"start": start,
-		"stop": stop
-	}
-	return _api_request("/content/api/epg/program/time/specify/", params)
-*/
-
 func Camera_create(name string, args map[string]interface{}) string {
 	params := map[string]interface{}{"name": name}
 	fields := []string{
