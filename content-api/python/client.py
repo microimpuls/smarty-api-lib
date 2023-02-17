@@ -83,6 +83,13 @@ class SmartyContentAPI(object):
         self._set_params(params, fields, kwargs)
         return self._api_request('/content/api/video/create/', params)
 
+    def video_list(self, limit, page):
+        params = {
+            'limit': limit,
+            'page': page,
+        }
+        return self._api_request('/content/api/video/list/', params)
+
     def videofile_create(self, name, vid, **kwargs):
         params = {
             'name': name,
