@@ -2,73 +2,73 @@ const axios = require('axios').default;
 const MD5 = require("crypto-js/md5");
 
 class SmartyBillingAPI {
-    #base_url;
-    #client_id;
-    #api_key;
-    constructor(base_url, client_id, api_key) {
-        this.#base_url = base_url;
-        this.#client_id = client_id;
-        this.#api_key = api_key;
+    #baseUrl;
+    #clientId;
+    #apiKey;
+    constructor(baseUrl, clientId, apiKey) {
+        this.#baseUrl = baseUrl;
+        this.#clientId = clientId;
+        this.#apiKey = apiKey;
     }
-    #get_signature(request_data) {
+    #getSignature(requestData) {
         let keys = [];
-        for (let key in request_data) {
+        for (let key in requestData) {
             keys.push(key);
         }
         keys.sort();
-        let sign_source = "";
+        let signSource = "";
         for (let i = 0; i < keys.length; i++) {
-            sign_source += keys[i].toString() + ':' + request_data[keys[i]] + ';';
+            signSource += keys[i].toString() + ':' + requestData[keys[i]] + ';';
         }
-        sign_source += this.#api_key.toString();
-        return MD5(Buffer.from(sign_source).toString('base64')).toString();
+        signSource += this.#apiKey.toString();
+        return MD5(Buffer.from(signSource).toString('base64')).toString();
     }
 
-    async #api_request(path, data) {
+    async #apiRequest(path, data) {
         if (data == null) {
             data = {};
         }
-        data['client_id'] = this.#client_id;
-        data['signature'] = this.#get_signature(data);
+        data['client_id'] = this.#clientId;
+        data['signature'] = this.#getSignature(data);
         const response = await axios({
             method: 'post',
-            url: this.#base_url + path,
+            url: this.#baseUrl + path,
             headers: {'content-type': 'application/x-www-form-urlencoded'},
             data: data,
         });
         return await response.data;
     }
 
-    async transaction_create(customer_id, transaction_id, amount=0, comment='', kwargs) {
+    async transactionCreate(customerId, transactionId, amount=0, comment='', kwargs) {
         if (kwargs == null) {
             kwargs = {};
         }
-        kwargs['customer_id'] = customer_id;
-        kwargs['id'] = transaction_id;
+        kwargs['customer_id'] = customerId;
+        kwargs['id'] = transactionId;
         kwargs['amount'] = amount;
         kwargs['comment'] = comment;
         try {
-            return await this.#api_request('/billing/api/transaction/create/', kwargs);
+            return await this.#apiRequest('/billing/api/transaction/create/', kwargs);
         }
         catch (e) {
             console.error(e);
         }
     }
 
-    async transaction_delete(customer_id, transaction_id) {
+    async transactionDelete(customerId, transactionId) {
         let params = {
-            'customer_id': customer_id,
-            'id': transaction_id,
+            'customer_id': customerId,
+            'id': transactionId,
         };
         try {
-            return await this.#api_request('/billing/api/transaction/delete/', params);
+            return await this.#apiRequest('/billing/api/transaction/delete/', params);
         }
         catch (e) {
             console.error(e);
         }
     }
 
-    async customer_create(kwargs) {
+    async customerCreate(kwargs) {
         let params = {};
         let fields = [
             'firstname', 'middlename', 'lastname', 'birthdate',
@@ -86,75 +86,75 @@ class SmartyBillingAPI {
             }
         }
 
-        let required_fields = ['firstname', 'lastname', 'middlename', 'comment'];
+        let requiredFields = ['firstname', 'lastname', 'middlename', 'comment'];
 
-        for (let i = 0; i < required_fields.length; i++) {
-            if (!(required_fields[i] in params)) {
+        for (let i = 0; i < requiredFields.length; i++) {
+            if (!(requiredFields[i] in params)) {
                 console.error("You must specify firstname or lastname or middlename or comment");
                 return;
             }
         }
 
         try {
-            return await this.#api_request('/billing/api/customer/create/', params);
+            return await this.#apiRequest('/billing/api/customer/create/', params);
         }
         catch (e) {
             console.error(e);
         }
     }
 
-    async customer_info(customer_id) {
+    async customerInfo(customerId) {
         let params = {
-            'customer_id': customer_id
+            'customer_id': customerId
         };
         try {
-            return await this.#api_request('/billing/api/customer/info/', params);
+            return await this.#apiRequest('/billing/api/customer/info/', params);
         }
         catch (e) {
             console.error(e);
         }
     }
 
-    async customer_tariff_assign(customer_id, tariff_id) {
+    async customerTariffAssignRemove(customerId, tariffId) {
         let params = {
-            'customer_id': customer_id,
-            'tariff_id': tariff_id,
+            'customer_id': customerId,
+            'tariff_id': tariffId,
         };
         try {
-            return await this.#api_request('/billing/api/customer/tariff/assign/', params);
+            return await this.#apiRequest('/billing/api/customer/tariff/assign/', params);
         }
         catch (e) {
             console.error(e);
         }
     }
 
-    async customer_tariff_remove(customer_id, tariff_id) {
+    async customerTariffRemove(customerId, tariffId) {
         let params = {
-            'customer_id': customer_id,
-            'tariff_id': tariff_id,
+            'customer_id': customerId,
+            'tariff_id': tariffId,
         };
         try {
-            return await this.#api_request('/billing/api/customer/tariff/remove/', params);
+            return await this.#apiRequest('/billing/api/customer/tariff/remove/', params);
         }
         catch (e) {
             console.error(e);
         }
     }
 
-    async account_info(abonement, account_id) {
-        if (abonement == null && account_id == null) {
-            console.error("abonement and account_id is null");
+    async accountInfo(abonement, accountId) {
+        if (abonement == null && accountId == null) {
+            console.error("abonement and accountId is null");
             return;
         }
         let params = {};
         if (abonement != null) {
             params['abonement'] = abonement;
         }
-        if (account_id != null) {
-            params['account_id'] = account_id;
+        if (accountId != null) {
+            params['account_id'] = accountId;
         }
         try {
-            return await this.#api_request('/billing/api/account/info/', params);
+            return await this.#apiRequest('/billing/api/account/info/', params);
         }
         catch (e) {
             console.error(e);
@@ -162,60 +162,60 @@ class SmartyBillingAPI {
     }
 
 
-    async account_create(customer_id, auto_activation_period) {
+    async accountCreate(customerId, autoActivationPeriod) {
         let params = {
-            'customer_id': customer_id,
+            'customer_id': customerId,
         };
-        if (auto_activation_period != null) {
-            params['auto_activation_period'] = auto_activation_period
+        if (autoActivationPeriod != null) {
+            params['auto_activation_period'] = autoActivationPeriod
         }
         try {
-            return await this.#api_request('/billing/api/account/create/', params);
+            return await this.#apiRequest('/billing/api/account/create/', params);
         }
         catch (e) {
             console.error(e);
         }
     }
 
-    async account_delete(abonement) {
-        let params = {
-            'abonement': abonement,
-        };
-        try {
-            return await this.#api_request('/billing/api/account/delete/', params);
-        }
-        catch (e) {
-            console.error(e);
-        }
-    }
-
-    async account_activate(abonement) {
+    async accountDelete(abonement) {
         let params = {
             'abonement': abonement,
         };
         try {
-            return await this.#api_request('/billing/api/account/activate/', params);
+            return await this.#apiRequest('/billing/api/account/delete/', params);
         }
         catch (e) {
             console.error(e);
         }
     }
 
-    async account_deactivate(abonement) {
+    async accountActivate(abonement) {
         let params = {
             'abonement': abonement,
         };
         try {
-            return await this.#api_request('/billing/api/account/deactivate/', params);
+            return await this.#apiRequest('/billing/api/account/activate/', params);
         }
         catch (e) {
             console.error(e);
         }
     }
 
-    async tariff_list() {
+    async accountDeactivate(abonement) {
+        let params = {
+            'abonement': abonement,
+        };
         try {
-            return await this.#api_request('/billing/api/tariff/list/');
+            return await this.#apiRequest('/billing/api/account/deactivate/', params);
+        }
+        catch (e) {
+            console.error(e);
+        }
+    }
+
+    async tariffList() {
+        try {
+            return await this.#apiRequest('/billing/api/tariff/list/');
         }
         catch (e){
             console.error(e);
@@ -225,18 +225,18 @@ class SmartyBillingAPI {
 
 // пример использования класса
 // (async function() {
-//     let api = new SmartyBillingAPI('base_url', 1, 'secret_key');
-//     // console.log(await api.tariff_list());
-//     // console.log(await api.account_info(590274));
-//     // console.log(await api.account_create(2222));
-//     // console.log(await api.customer_tariff_assign(2222, 1));
-//     // console.log(await api.customer_info(2233));
-//     // console.log(await api.customer_create({
+//     let api = new SmartyBillingAPI('baseUrl', 1, 'secret_key');
+//     // console.log(await api.tariffList());
+//     // console.log(await api.accountInfo(590274));
+//     // console.log(await api.accountCreate(2222));
+//     // console.log(await api.customerTariffAssignRemove(2222, 1));
+//     // console.log(await api.customerInfo(2233));
+//     // console.log(await api.customerCreate({
 //     //     'firstname': 'ivan',
 //     //     'lastname': 'ivanov',
 //     //     'middlename': 'ivanovich',
 //     //     'comment': 'ochen krasivbli',
 //     // }));
-//     // console.log(await api.transaction_create(2233, 222,undefined, undefined));
-//     // console.log(await api.transaction_delete(2233, 222));
+//     // console.log(await api.transactionCreate(2233, 222,undefined, undefined));
+//     // console.log(await api.transactionDelete(2233, 222));
 // })();
