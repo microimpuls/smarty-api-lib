@@ -23,7 +23,7 @@ class SmartyContentAPI {
                 sortedRequestData[key].sort();
             }
         }
-        let signSource = querystring.stringify(sortedRequestData, ';', ':');
+        let signSource = querystring.stringify(sortedRequestData, ';', ':', { encodeURIComponent: decodeURI });
 
         signSource += ';' + this.#apiKey.toString();
         console.log(signSource);
@@ -40,7 +40,7 @@ class SmartyContentAPI {
         const http = new XMLHttpRequest();
         http.open('POST', this.#baseUrl + path, false);
 
-        http.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        http.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=utf-8');
         http.responseType = 'json';
 
         http.send(querystring.stringify(data, '&'));
@@ -90,9 +90,7 @@ class SmartyContentAPI {
 // пример использования класса
 (async function() {
     let api = new SmartyContentAPI('your base url', 1, 'top secret');
-    console.log(await api.customerCreate('baruto1.1', '0',
-        {'tariffs':[ 150, 237, 1, 409, 419],
-                'stream_services':[56, 47]}));
+    console.log(await api.customerCreate('тест', '0'));
     // console.log(await api.tariffList());
     // console.log(await api.accountInfo(590274));
     // console.log(await api.accountCreate(2222));
