@@ -23,7 +23,7 @@ class SmartyContentAPI {
                 sortedRequestData[key].sort();
             }
         }
-        let signSource = querystring.stringify(sortedRequestData, ';', ':', { encodeURIComponent: decodeURI });
+        let signSource = querystring.stringify(sortedRequestData, ';', ':', { encodeURIComponent: unescape });
 
         signSource += ';' + this.#apiKey.toString();
         console.log(signSource);
