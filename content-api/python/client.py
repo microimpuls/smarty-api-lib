@@ -57,7 +57,7 @@ class SmartyContentAPI(object):
     @staticmethod
     def _set_params(params, fields, kwargs):
         for key, value in kwargs.items():
-            if key in fields:
+            if key.lower() in fields:
                 params[key] = value
 
 # VIDEO
