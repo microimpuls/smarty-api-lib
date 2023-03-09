@@ -53,4 +53,4 @@ class ImportVideoFromFile():
 
 if __name__ == "__main__":
     api = SmartyContentAPI(SERVER_HOST, CLIENT_ID, API_KEY)
-    Import_video_from_file(api, INPUT_FILE_NAME)
+    ImportVideoFromFile(api, INPUT_FILE_NAME)
