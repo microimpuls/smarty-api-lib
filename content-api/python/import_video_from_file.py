@@ -8,10 +8,11 @@ except ImportError:
     raise ImportError("client.py file not found")
 
 SERVER_HOST = 'http://127.0.0.1:8000'
-API_KEY = 'ofYI09U9jsI7EhNCYsJ0l56eYgAPgfFr' # Content API key
+API_KEY = 'api_key' # Content API key
 CLIENT_ID = 1
+INPUT_FILE_NAME = 'path to the file'
 
-class Import_video_from_file():
+class ImportVideoFromFile():
     def __init__(self, api, file_path: str):
         self.api = api
         self.file_path = file_path
@@ -21,10 +22,9 @@ class Import_video_from_file():
         elif self.file_path.split('.')[-1] == "xlsx":
             self.parse_xlsx()
         else:
-            print("Excaptions: type file not a .csv or .xlsx")
+            print("Exctption: type file not a .csv or .xlsx")
 
     def parse_csv(self):
-        # parsing csv
         kwargs = {}
         with open(self.file_path, 'r') as file:
             reader = csv.DictReader(file)
@@ -32,14 +32,13 @@ class Import_video_from_file():
                 name = row.pop('Name')
                 rating = row.pop('Rating')
                 if not name or not rating:
-                    print("Excaption: not name or rating!")
+                    print("Exception: not name or rating")
                     continue
                 for key, value in row.items():
                     kwargs[key] = value
                 print(self.api.video_create(name, rating, **kwargs))
 
     def parse_xlsx(self):
-        # parsing xlsx
         wookbook = openpyxl.load_workbook(self.file_path)
         worksheet = wookbook.active
         kwargs = {}
@@ -52,9 +51,6 @@ class Import_video_from_file():
             print(self.api.video_create(name, rating, **kwargs))
             kwargs.clear()
 
-    pass
-
 if __name__ == "__main__":
     api = SmartyContentAPI(SERVER_HOST, CLIENT_ID, API_KEY)
-    input_file = 'client_1_services_videos_2023_03_06T16_40_29.csv'
-    Import_video_from_file(api, input_file)
+    Import_video_from_file(api, INPUT_FILE_NAME)
