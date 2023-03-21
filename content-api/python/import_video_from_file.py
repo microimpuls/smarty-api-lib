@@ -9,9 +9,9 @@ except ImportError:
     raise ImportError("client.py file not found")
 
 SERVER_HOST = 'http://127.0.0.1:8000'
-API_KEY = 'api_key' # Content API key
+API_KEY = '1' # Content API key
 CLIENT_ID = 1
-INPUT_FILE_NAME = 'path to the file'
+INPUT_FILE_NAME = '/home/superdef454/Загрузки/videotest(2).xlsx'
 
 class ImportVideoFromFile():
     def __init__(self, api, file_path: str):
@@ -36,7 +36,11 @@ class ImportVideoFromFile():
                     print("Exception: not name or rating")
                     continue
                 for key, value in row.items():
-                    kwargs[key] = value
+                    if value:
+                        if len(value.split(', ')) > 1 and value.replace(', ', '').isnumeric():
+                            kwargs[key] = [int(i) for i in value.split(', ')]
+                        else:
+                            kwargs[key] = value
                 self.api.video_create(name, rating, **kwargs)
                 kwargs.clear()
 
@@ -47,7 +51,10 @@ class ImportVideoFromFile():
         for i in range(1, worksheet.max_row):
             for col in worksheet.iter_cols(1, worksheet.max_column):
                 if col[i].value and col[0].value:
-                    kwargs[col[0].value] = col[i].value
+                    if type(col[i].value) == str and len(col[i].value.split(', ')) > 1 and col[i].value.replace(', ', '').isnumeric():
+                        kwargs[col[0].value] = [int(i) for i in col[i].value.split(', ')]
+                    else:
+                        kwargs[col[0].value] = col[i].value
             name = kwargs.pop('name')
             rating = kwargs.pop('rating')
             self.api.video_create(name, rating, **kwargs)
