@@ -55,7 +55,7 @@ class SmartyContentAPI(object):
         return api_response
 
     @staticmethod
-    def _set_params(params, fields, kwargs={}):
+    def _format_params(params, fields, kwargs={}):
         params_list = [(k, v) for k, v in params.items()]
         for key, value in kwargs.items():
             if key in fields and isinstance(value, list):
@@ -85,13 +85,13 @@ class SmartyContentAPI(object):
             'imdb_rating', 'average_customers_rating', 'duration', 'parent_control', 
             'is_announcement'
         ]
-        params_list = self._set_params(params, fields, kwargs)
+        params_list = self._format_params(params, fields, kwargs)
         return self._api_request('/content/api/video/create/', params_list)
 
     def video_list(self, **kwargs):
         params = {}
         fields = ['limit', 'page']
-        params_list = self._set_params(params, fields, kwargs)
+        params_list = self._format_params(params, fields, kwargs)
         return self._api_request('/content/api/video/list/', params_list)
 
     def videofile_create(self, name, vid, **kwargs):
@@ -104,13 +104,13 @@ class SmartyContentAPI(object):
             'name_lang5', 'filename', 'duration', 'is_trailer', 'ext_id', 'sort_after_vfid', 
             'quality'
         ]
-        params_list = self._set_params(params, fields, kwargs)
+        params_list = self._format_params(params, fields, kwargs)
         return self._api_request('/content/api/video/file/create/', params_list)
 
     def video_delete(self, id):
         params = {'id': id}
         fields = []
-        params_list = self._set_params(params, fields)
+        params_list = self._format_params(params, fields)
         return self._api_request('/content/api/video/delete/', params_list)
 
     def video_modify(self, id, **kwargs):
@@ -125,7 +125,7 @@ class SmartyContentAPI(object):
             'year', 'poster_url', 'screenshot_url', 'actors_set', 'genres_kinopoisk', 
             'kinopoisk_rating', 'imdb_rating', 'rating', 'duration'
         ]
-        params_list = self._set_params(params, fields, kwargs)
+        params_list = self._format_params(params, fields, kwargs)
         return self._api_request('/content/api/video/modify/', params_list)
 
     def videofile_modify(self, id, **kwargs):
@@ -134,7 +134,7 @@ class SmartyContentAPI(object):
             'name', 'name_lang1', 'name_lang2', 'name_lang3', 'name_lang4', 
             'name_lang5', 'filename', 'is_trailer', 'duration', 'episode_id', 'quality'
         ]
-        params_list = self._set_params(params, fields, kwargs)
+        params_list = self._format_params(params, fields, kwargs)
         return self._api_request('/content/api/video/file/modify/', params_list)
 
 # SEASON
@@ -147,13 +147,13 @@ class SmartyContentAPI(object):
             'name_lang1', 'name_lang2', 'name_lang3', 
             'name_lang4', 'name_lang5', 'sort_after_sid'
         ]
-        params_list = self._set_params(params, fields, kwargs)
+        params_list = self._format_params(params, fields, kwargs)
         return self._api_request('/content/api/season/create/', params_list)
 
     def season_delete(self, id):
         params = {'id': id}
         fields = []
-        params_list = self._set_params(params, fields)
+        params_list = self._format_params(params, fields)
         return self._api_request('/content/api/season/delete/', params_list)
 
     def season_modify(self, season_id, **kwargs):
@@ -164,7 +164,7 @@ class SmartyContentAPI(object):
             'name', 'name_lang1', 'name_lang2', 'name_lang3', 
             'name_lang4', 'name_lang5', 'sort_after_sid'
         ]
-        params_list = self._set_params(params, fields, kwargs)
+        params_list = self._format_params(params, fields, kwargs)
         return self._api_request('/content/api/season/modify/', params_list)
 
 # EPISODE
@@ -179,13 +179,13 @@ class SmartyContentAPI(object):
             'description_lang4', 'description_lang5', 'duration', 'season_id',
             'sort_after_eid'
         ]
-        params_list = self._set_params(params, fields, kwargs)
+        params_list = self._format_params(params, fields, kwargs)
         return self._api_request('/content/api/episode/create/', params_list)
 
     def episode_delete(self, id):
         params = {'id': id}
         fields = []
-        params_list = self._set_params(params, fields)
+        params_list = self._format_params(params, fields)
         return self._api_request('/content/api/episode/delete/', params_list)
 
     def episode_modify(self, episode_id, **kwargs):
@@ -198,7 +198,7 @@ class SmartyContentAPI(object):
             'description_lang3', 'description_lang4', 'description_lang5', 'duration', 
             'sort_after_eid'
         ]
-        params_list = self._set_params(params, fields, kwargs)
+        params_list = self._format_params(params, fields, kwargs)
         return self._api_request('/content/api/episode/modify/', params_list)
 
 # CHANNEL
@@ -220,13 +220,13 @@ class SmartyContentAPI(object):
             'price_category', 'sort_after_cid', 'additional_categories', 'tariffs', 
             'stream_services', 'hbb_providers'
         ]
-        params_list = self._set_params(params, fields, kwargs)
+        params_list = self._format_params(params, fields, kwargs)
         return self._api_request('/content/api/channel/create/', params_list)
 
     def channel_delete(self, id):
         params = {'id': id}
         fields = []
-        params_list = self._set_params(params, fields)
+        params_list = self._format_params(params, fields)
         return self._api_request('/content/api/channel/delete/', params_list)
 
     def channel_list(self, **kwargs):
@@ -234,7 +234,7 @@ class SmartyContentAPI(object):
         fields = [
             'limit', 'page', 'search', 'search_tariff', 'tariffs', 'search_stream_service', 'stream_services'
         ]
-        params_list = self._set_params(params, fields, kwargs)
+        params_list = self._format_params(params, fields, kwargs)
         return self._api_request('/content/api/channel/list/', params_list)
 
 #SEANCE
@@ -246,25 +246,25 @@ class SmartyContentAPI(object):
         fields = [
             'vfid', 'date_end'
         ]
-        params_list = self._set_params(params, fields, kwargs)
+        params_list = self._format_params(params, fields, kwargs)
         return self._api_request('/content/api/seance/create/', params_list)
 
     def seance_delete(self, id):
         params = {'id': id}
         fields = []
-        params_list = self._set_params(params, fields)
+        params_list = self._format_params(params, fields)
         return self._api_request('/content/api/seance/delete/', params_list)
 
     def seance_ticket_create(self, sid, **kwargs):
         params = {'sid': sid}
         fields = ['code']
-        params_list = self._set_params(params, fields, kwargs)
+        params_list = self._format_params(params, fields, kwargs)
         return self._api_request('/content/api/seance/ticket/create/', params_list)
 
     def seance_ticket_delete(self, id):
         params = {'id': id}
         fields = []
-        params_list = self._set_params(params, fields)
+        params_list = self._format_params(params, fields)
         return self._api_request('/content/api/seance/ticket/delete/', params_list)
 
 #RADIO
@@ -276,13 +276,13 @@ class SmartyContentAPI(object):
             'description_lang2', 'description_lang3', 'description_lang4', 
             'description_lang5', 'radio_channel'
         ]
-        params_list = self._set_params(params, fields, kwargs)
+        params_list = self._format_params(params, fields, kwargs)
         return self._api_request('/content/api/radio/create/', params_list)
 
     def radio_delete(self, id):
         params = {'id': id}
         fields = []
-        params_list = self._set_params(params, fields)
+        params_list = self._format_params(params, fields)
         return self._api_request('/content/api/radio/delete/', params_list)
 
 #EPGPROGRAM
@@ -294,7 +294,7 @@ class SmartyContentAPI(object):
             'stop': stop
         }
         fields = []
-        params_list = self._set_params(params, fields)
+        params_list = self._format_params(params, fields)
         return self._api_request('/content/api/epg/program/time/specify/', params_list)
 
 #CAMERA
@@ -307,7 +307,7 @@ class SmartyContentAPI(object):
             'multicast_address', 'secondary_multicast_address', 'id_for_stream_service', 
             'comment', 'option1', 'option2', 'option3'
         ]
-        params_list = self._set_params(params, fields, kwargs)
+        params_list = self._format_params(params, fields, kwargs)
         return self._api_request('/content/api/camera/create/', params_list)
 
     def camera_modify(self, camera_id, **kwargs):
@@ -317,13 +317,13 @@ class SmartyContentAPI(object):
             'name_lang5', 'enabled', 'tariffs', 'stream_services', 'uri', 
             'url_prefix', 'multicast_address', 'price_category'
         ]
-        params_list = self._set_params(params, fields, kwargs)
+        params_list = self._format_params(params, fields, kwargs)
         return self._api_request('/content/api/camera/modify/', params_list)
 
     def camera_delete(self, id):
         params = {'id': id}
         fields = []
-        params_list = self._set_params(params, fields)
+        params_list = self._format_params(params, fields)
         return self._api_request('/content/api/camera/delete/', params_list)
 
 #ACTOR
@@ -338,13 +338,13 @@ class SmartyContentAPI(object):
             'biography_lang2', 'biography_lang3', 'biography_lang4', 'biography_lang5', 
             'name_orig', 'movie_db_id'
         ]
-        params_list = self._set_params(params, fields, kwargs)
+        params_list = self._format_params(params, fields, kwargs)
         return self._api_request('/content/api/actor/create/', params_list)
 
     def actor_delete(self, id):
         params = {'id': id}
         fields = []
-        params_list = self._set_params(params, fields)
+        params_list = self._format_params(params, fields)
         return self._api_request('/content/api/actor/delete/', params_list)
 
 
