@@ -9,9 +9,9 @@ except ImportError:
     raise ImportError("client.py file not found")
 
 SERVER_HOST = 'http://127.0.0.1:8000'
-API_KEY = '1' # Content API key
+API_KEY = 'Content API key'
 CLIENT_ID = 1
-INPUT_FILE_NAME = '/home/superdef454/Загрузки/videotest(2).xlsx'
+INPUT_FILE_NAME = 'path to the file'
 
 class ImportVideoFromFile():
     def __init__(self, api, file_path: str):
