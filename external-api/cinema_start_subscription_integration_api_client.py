@@ -1,8 +1,17 @@
 # -*- coding: utf-8 -*-
+"""
+1. Данный файл должен быть импортирован при старте smarty,
+Необходимо поместить его в директорию modules_available и он импортируется автоматически
+2. Затем следует активировать в настройках системы: 
+2.1 Авторизоваться в smarty
+2.2 Во вкладке "Общие настройки" открыть пункт "Интеграция с API внешних систем" 
+2.3 Создать новый объект, а в поле "API handler class:" выбрать текущую интеграцию
+"""
 
 from cinema_start.api_client import CinemaStartApiClient
 import logging
 import requests
+import external_api.registry
 from core.utils import unicode_to_str
 from external_api.video_api_client import api_has_subscription
 from external_api.exceptions import ExternalApiException, NotEnoughFundsException
@@ -162,3 +171,5 @@ class CinemaStartCustomApiClient(CinemaStartApiClient):
         elif not dont_assign_tariff:
             tariff_compat = get_subject_tariff_compat(subject)
             tariff_compat.assign(smarty_tariff)
+
+external_api.registry.add('external_billing_integration', CinemaStartCustomApiClient)
