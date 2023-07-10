@@ -20,7 +20,7 @@ from billing.currency import CurrencySettings
 from clients.models import LocaleString
 from clients.locale import BackendStrings
 from billing.actions import buy_tariff
-import settings
+from django.conf import settings
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
