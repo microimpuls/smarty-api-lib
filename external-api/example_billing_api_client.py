@@ -21,6 +21,11 @@ from external_api.exceptions import ExternalApiException
 from tvmiddleware.api_base import TVMiddlewareApiParams
 from tvmiddleware.models import Account
 
+from external_api.objects import AccountRegisterResponse
+from tvmiddleware.models import AccountHelper, ClientPlayDevice
+
+from tvmiddleware.register import RegisterParams, RegisterProcess
+
 
 # логи располагаются в /logs/smarty_custom.log
 logger = logging.getLogger('smarty_custom')
@@ -30,7 +35,7 @@ class ExampleHydraClient(object):
     def __init__(self, base_url):
         self.base_url = base_url
 
-    def _request(self, method_url):
+    def _request(self, method_url, data, method):
         url = urljoin(self.base_url, method_url)
         log_ctx = {'url': url}
 
@@ -39,7 +44,10 @@ class ExampleHydraClient(object):
             'Content-Type': 'application/json'
         }
         try:
-            response = requests.get(url, headers=headers)
+            if method == "post":
+                response = requests.post(url, json=data, headers=headers)
+            else:
+                response = requests.get(url, json=data, headers=headers)
 
             log_ctx.update({
                 'status_code': response.status_code,
@@ -68,6 +76,36 @@ class ExampleHydraClient(object):
         method_url = f'/rest/v1/subjects/customers/{customer_id}'
         response = self._request(method_url)
         return response.get('customer')
+
+    def create_customer(self, register_params: RegisterParams):
+        """Метод создания кастомера во внешнем биллинге"""
+
+        """Пример формирования данных на основе register_params для отправки в внешний биллинг"""
+        data = {
+                "customer": {
+                    "n_base_subject_id": 78194101,
+                    "vc_code": "Meine created",
+                    "t_tags": [
+                        "тестовый_абонент"
+                    ],
+                    "n_subj_group_id": 55027301,
+                    "group_ids": [
+                        40250801
+                    ],
+                    "vc_rem": register_params.comment
+                }
+                }
+        method_url = "/rest/v1/subjects/customers/"
+        response = self._request(method_url, data=data, method="post")
+        """Разбор ответа"""
+        if response.status_code == 201:
+            return response.json()
+        else:
+            logger.error('external_billing_response', extra={'ctx': {
+                    'error': response.text,
+                    'code': response.status_code
+                }})
+            raise ExternalApiException('error_getting_data_from_external_billing')
 
 
 class ExampleApiClient(SmartyBilling):
@@ -102,6 +140,31 @@ class ExampleApiClient(SmartyBilling):
         else:
             # Проверка неуспешна. /login вернет код 3, /account_status вернет код 2
             raise ExternalApiException('check failed')
+
+    def register_account_new(
+            self, register_params: RegisterParams, params: TVMiddlewareApiParams, client_play_device: ClientPlayDevice
+    ) -> AccountRegisterResponse:
+        """Регистрация аккаунта во внешнем биллинге.
+
+        @param register_params: Параметры регистрации.
+        @param params: Параметры API.
+        @param client_play_device: Тип устройства.
+
+        @return: Результат регистрации.
+        """
+
+        response = AccountRegisterResponse()
+
+        """Подтверждает номер телефона, если это необходимо."""
+        process = RegisterProcess(params.client, client_play_device, register_params, '')
+        process.confirm_registration()
+
+        """После подтверждения номера телефона отправляем запрос во внешний биллинг и получаем ext_id"""
+        response.ext_id = self.hydra_api.create_customer(register_params)['customer']['n_subject_id']
+
+        response.abonement = AccountHelper.get_next_abonement(params.client)
+        response.status = AccountRegisterResponse.STATUS_NEED_TO_CREATE
+        return response
 
 
 # регистрация класса api
