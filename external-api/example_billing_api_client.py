@@ -6,22 +6,25 @@
 Использование:
 1. В меню Smarty "Интеграция с API внешних систем" создать новую интеграцию.
 2. В поле "API handler class" указать созданный класс (в данном примере: "example_api_client").
-3. Задать необходимые "Дополнительные атрибуты", которые будут передаваться в __init__ класса (в данном примере: base_url).
+3. Задать необходимые "Дополнительные атрибуты", которые будут передаваться в __init__ класса (в примере: base_url).
 4. Сохранить.
 """
 
+from datetime import datetime
 import logging
 import requests
 
 from urllib.parse import urljoin
+from billing.models import CustomerTransaction
 
 import external_api.registry
-from billing.api_client import SmartyBilling
+from billing.api_client import SmartyBilling, SmartyBillingErrorBalance, SmartyBillingErrorTariffAlreadyActive
 from external_api.exceptions import ExternalApiException
 from tvmiddleware.api_base import TVMiddlewareApiParams
-from tvmiddleware.models import Account
+from tvmiddleware.billing_helpers import CustomerAssignTariff, CustomerBillingCompat, CustomerTariffService, SubjectSubscriptionService, SubscriptionCreator
+from tvmiddleware.models import Account, Customer, Tariff
 
-from external_api.objects import AccountRegisterResponse
+from external_api.objects import AccountRegisterResponse, TariffAssignResponse
 from tvmiddleware.models import AccountHelper, ClientPlayDevice
 
 from tvmiddleware.register import RegisterParams, RegisterProcess
@@ -46,8 +49,10 @@ class ExampleHydraClient(object):
         try:
             if method == "post":
                 response = requests.post(url, json=data, headers=headers)
+            elif method == "put":
+                response = requests.put(url, json=data, headers=headers)
             else:
-                response = requests.get(url, json=data, headers=headers)
+                response = requests.get(url, data, headers=headers)
 
             log_ctx.update({
                 'status_code': response.status_code,
@@ -60,21 +65,22 @@ class ExampleHydraClient(object):
             logger.debug('hydra_request', extra={'ctx': log_ctx})
 
             response = response.json()
-        except requests.HTTPError as e:
+        except requests.HTTPError:
             # логирование неуспешного запроса
             logger.warning('hydra_request', extra={'ctx': log_ctx})
             return None
-        except Exception as e:
+        except Exception:
             # логирование исключения
             logger.exception('external_billing_request_exception', extra={'ctx': log_ctx})
-            # в случае возникновения исключения ExternalApiException метод /login вернет код 3, /account_status вернет код 2
+            # в случае возникновения исключения ExternalApiException метод /login вернет код 3,
+            #                                                              /account_status вернет код 2
             raise ExternalApiException('unexpected external api error')
         else:
             return response
 
     def show_customer(self, customer_id):
         method_url = f'/rest/v1/subjects/customers/{customer_id}'
-        response = self._request(method_url)
+        response = self._request(method_url, {}, '')
         return response.get('customer')
 
     def create_customer(self, register_params: RegisterParams):
@@ -82,30 +88,51 @@ class ExampleHydraClient(object):
 
         """Пример формирования данных на основе register_params для отправки в внешний биллинг"""
         data = {
-                "customer": {
-                    "n_base_subject_id": 78194101,
-                    "vc_code": "Meine created",
-                    "t_tags": [
-                        "тестовый_абонент"
-                    ],
-                    "n_subj_group_id": 55027301,
-                    "group_ids": [
-                        40250801
-                    ],
-                    "vc_rem": register_params.comment
-                }
-                }
+            "customer": {
+                "n_base_subject_id": 78194101,
+                "vc_code": "Meine created",
+                "t_tags": [
+                    "тестовый_абонент"
+                ],
+                "n_subj_group_id": 55027301,
+                "group_ids": [
+                    40250801
+                ],
+                "vc_rem": register_params.comment
+            }
+        }
         method_url = "/rest/v1/subjects/customers/"
         response = self._request(method_url, data=data, method="post")
-        """Разбор ответа"""
-        if response.status_code == 201:
-            return response.json()
-        else:
-            logger.error('external_billing_response', extra={'ctx': {
-                    'error': response.text,
-                    'code': response.status_code
-                }})
-            raise ExternalApiException('error_getting_data_from_external_billing')
+        return response
+
+    def create_subscription(self, external_id_tariff, external_id_customer):
+        """Создания подписки во внешнем биллинге"""
+
+        """Формирование данных для отправки во внешний биллинг"""
+        data = {
+            "subscription": {
+                "n_service_id": external_id_tariff,
+                "n_customer_id": external_id_customer,
+                "d_begin": datetime.now().astimezone().isoformat(sep="T", timespec="seconds")
+            }
+        }
+        url = f'/rest/v1/subjects/customers/{external_id_customer}/subscriptions/'
+        self._request(url, data=data, method="post")
+
+    def close_subscription(self, external_id_tariff, external_id_customer):
+        """Отключение подписки во внешнем биллинге"""
+
+        """Формирование данных для отправки во внешний биллинг"""
+        data = {
+            "subscription": {
+                "n_service_id": external_id_tariff,
+                "n_customer_id": external_id_customer,
+                "d_end": datetime.now().astimezone().isoformat(sep="T", timespec="seconds"),
+                "close_charge_log": True
+            }
+        }
+        url = f'/rest/v1/subjects/customers/{external_id_customer}/subscriptions/{external_id_tariff}'
+        self._request(url, data=data, method="put")
 
 
 class ExampleApiClient(SmartyBilling):
@@ -121,8 +148,10 @@ class ExampleApiClient(SmartyBilling):
             device_model: str,
             params: TVMiddlewareApiParams, **kwargs
     ) -> str:
-        """Проверка статуса аккаунта во внешнем биллинге. При ошибке проверки нужно кидать исключение ExternalApiException.
-        :param account: объект аутентифицированного аккаунта, от лица которого осуществляется запрос к методу /login или /account_status,
+        """Проверка статуса аккаунта во внешнем биллинге.
+        При ошибке проверки нужно кидать исключение ExternalApiException.
+        :param account: объект аутентифицированного аккаунта, от лица которого осуществляется запрос к методу /login
+        или /account_status,
         :param ip: ip-адрес источника запроса к методу /login или /account_status,
         :param device_uid: uid устройства, переданный в метод /login или /account_status,
         :param device_model: модель устройства, переданная в метод /login или /account_status,
@@ -165,6 +194,83 @@ class ExampleApiClient(SmartyBilling):
         response.abonement = AccountHelper.get_next_abonement(params.client)
         response.status = AccountRegisterResponse.STATUS_NEED_TO_CREATE
         return response
+
+    def customer_assign_nonbasic_tariff(self, customer: Customer, tariff: Tariff):
+        """Подключает тариф во внешней системе (используются только дополнительные тарифы).
+
+        @param customer: Объект абонента.
+        @param tariff: Объект тарифа.
+        """
+
+        """Получение внешнего id тарифа из смарти"""
+        external_id_tariff = tariff.ext_id
+        if not external_id_tariff:
+            raise ExternalApiException('no external tariff id')
+
+        """Получения внешнего id кастомера из смарти для отправки во внешний биллинг"""
+        external_id_customer = customer.ext_id
+        if not external_id_customer:
+            raise ExternalApiException('no external customer id')
+
+        """Проверяем на наличие тарифа у кастомера"""
+        tariff_service = CustomerTariffService(customer)
+        if tariff_service.tariff_active_for(tariff):
+            raise SmartyBillingErrorTariffAlreadyActive
+
+        """Проверяем баланс кастомера"""
+        customer_tariff_assign = CustomerAssignTariff(customer, tariff)
+        price = customer_tariff_assign._get_activation_price()
+        if customer_tariff_assign._get_subject_balance() < price:
+            raise SmartyBillingErrorBalance()
+
+        """Отправляем запрос на подключение тарифа во внешний биллинг"""
+        self.hydra_api.create_subscription(external_id_tariff, external_id_customer)
+
+        """В случае подключения тарифа во внешнем биллинге подключаем тариф в смарти"""
+        client = customer.client
+        """Проверка типа логики биллинга
+        Отображается на странице настроек Client раздел 'Внутренний биллинг'
+        """
+        if not client.use_new_billing_logic:
+            customer_tariff_assign = CustomerAssignTariff(customer, tariff)
+            customer_tariff_assign.assign_tariff()
+        else:
+            subscription_creator = SubscriptionCreator(tariff, customer)
+            sub = subscription_creator.create()
+            subscription_creator.notify()
+            CustomerTransaction(
+                amount=-sub.price,
+                customer=customer,
+                status=CustomerTransaction.STATUS_PROCESSED,
+                source=CustomerTransaction.SOURCE_INTERNAL,
+            ).save()
+            CustomerBillingCompat(customer).charge_inactive_accounts()
+
+        return TariffAssignResponse()
+
+    def customer_unassign_nonbasic_tariff(self, customer: Customer, tariff: Tariff):
+        """Отключает дополнительный тариф.
+
+        @param customer: Объект абонента.
+        @param tariff: Объект тарифа.
+        """
+
+        """Получение внешнего id тарифа из смарти"""
+        external_id_tariff = tariff.ext_id
+        if not external_id_tariff:
+            raise ExternalApiException('no external tariff id')
+
+        """Получения внешнего id кастомера из смарти для отправки во внешний биллинг"""
+        external_id_customer = customer.ext_id
+        if not external_id_customer:
+            raise ExternalApiException('no external customer id')
+
+        """Отключаем тариф в внешнем биллинге"""
+        self.hydra_api.close_subscription(external_id_tariff, external_id_customer)
+
+        """В случае успешного отключения тарифа во внешнем биллинге отключаем в смарти"""
+        crt = SubjectSubscriptionService(customer)
+        crt.unsubscribe(tariff)
 
 
 # регистрация класса api
