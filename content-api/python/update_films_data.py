@@ -26,7 +26,7 @@ class UpdateVideoList(object):
         pages = count // limit
         if count % limit != 0:
             pages += 1
-        return pages+1
+        return pages
 
     def _update_video(self, video_files: int):
         api.video_modify(id=video_files, load_meta=1)
@@ -46,19 +46,13 @@ class UpdateVideoList(object):
                 continue
 
     def run(self):
-        """Запуск скрипта обновления метаданных фильмов и сериалов в Smarty.
-
-        Args:
-            videos_per_page (:obj:`int`): Количество фильмов и сериалов на одну страницу.
-            response (:obj:`SmartyContentAPI`): Ответ, получаемый от Smarty. В данном случаи - список видео.
-            pages (:obj:`int`): Номер страницы.
-        """
+        """Запуск скрипта обновления метаданных фильмов и сериалов в Smarty."""
         videos_per_page: int = 1
         response = self.api.video_list(page=1, limit=videos_per_page)
         self._update_content(response['videos'])
         if response['count'] > videos_per_page:
             pages = self._get_pages(videos_per_page, response['count'])
-            for i in range(2, pages):
+            for i in range(2, pages + 1):
                 response = self.api.video_list(page=i, limit=videos_per_page)
                 self._update_content(response['videos'])
 
