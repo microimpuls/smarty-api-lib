@@ -83,7 +83,7 @@ class SmartyContentAPI(object):
             'external_api_config', 'price_category', 'video_provider', 'genres', 'stream_services', 
             'tariffs', 'actors_set', 'available_on', 'package_videos', 'kinopoisk_rating',
             'imdb_rating', 'average_customers_rating', 'duration', 'parent_control', 
-            'is_announcement'
+            'is_announcement', 'kinopoisk_id'
         ]
         params_list = self._format_params(params, fields, kwargs)
         return self._api_request('/content/api/video/create/', params_list)
@@ -350,7 +350,7 @@ class SmartyContentAPI(object):
 
 
 api = SmartyContentAPI(base_url='http://smarty.example.com/', client_id=1, api_key='top secret')
-#print(api.video_create('baruto_6', 0, kinopoisk_rating=10, year=2022))
+#print(api.video_create('baruto_6', 0, kinopoisk_rating=10, year=2022, kinopoisk_id=123))
 #print(api.season_create('season3', '316225', sort_after_sid=13093))
 #print(api.episode_create(316225, '1', season_id=13093))
 #print(api.videofile_create('file_1', 316225, episode_id=254950))
