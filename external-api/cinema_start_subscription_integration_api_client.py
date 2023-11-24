@@ -13,16 +13,13 @@ import logging
 import requests
 import external_api.registry
 from core.utils import unicode_to_str
-from external_api.video_api_client import api_has_subscription
-from external_api.exceptions import ExternalApiException, NotEnoughFundsException
-from tvmiddleware.billing_helpers import activation_price, SubscriptionCreator, get_subject_tariff_compat
+from external_api.video_api_client import get_video_api_full_tariffs
+from external_api.exceptions import ExternalApiException
 from billing.currency import CurrencySettings
-from clients.models import LocaleString
-from clients.locale import BackendStrings
-from billing.actions import buy_tariff
-from django.conf import settings
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+
+from tvmiddleware.models import Subject, Tariff, TariffSubscription
 
 custom_logger = logging.getLogger('smarty_custom')
 
@@ -125,51 +122,32 @@ class CinemaStartCustomApiClient(CinemaStartApiClient):
             return self.subscribe_svod(customer, smarty_tariff)
         return {}
 
-    def subscribe_svod(self, subject, smarty_tariff, skip_transaction_creation=False, dont_assign_tariff=False):
+    def subscribe_svod(self, subject: Subject, smarty_tariff: Tariff) -> None:
         """
+        Subscribes the subject
         subject - The account or user object to pass in
         smarty_tariff - Tariff object
-        skip_transaction_creation - Parameter responsible for disabling debiting the cost of the tariff from the account
-        dont_assign_tariff - Parameter responsible for skipping the connection of the tariff in Smart in case of skipping the payment operation
         
+        Производит подписку субъекта
         subject - Передаваемый объект аккаунта или пользователя
         smarty_tariff - Объект тарифа
-        skip_transaction_creation - Параметр, отвечающий за отключение списания стоимости тарифа с аккаунта
-        dont_assign_tariff - Параметр, отвечающий за пропуск подключения тарифа в смарти в случае пропуска операции оплаты
         """
         customer = self._customer_from_subject(subject)
-        price = 0.0
-        if not skip_transaction_creation:
-            if settings.EXTERNAL_API_VIDEO_CHECK_BALANCE_REQUEST:
-                self.perform_subscr_action_in_default_video_api_client(smarty_tariff.id, customer, 'check_balance')
-                customer.refresh_from_db()
+        price = float(smarty_tariff.price)
 
-            price = float(activation_price(smarty_tariff, customer))
-            if not self.ignore_customer_balance_check and price and price > customer.balance:
-                raise NotEnoughFundsException('subscription price is greater than customer balance')
+        tariffs = get_video_api_full_tariffs(self.api_config)
+        subscriptions = TariffSubscription.active_by_subject(subject).filter(tariff__in=tariffs)
 
-        has_subscription = api_has_subscription(subject, self.api_config)
-
-        if not has_subscription:
-            creator = SubscriptionCreator(smarty_tariff, subject, api_config=self.api_config, unlimited=True)
-            subscription = creator.create()
+        if len(subscriptions) == 1:
             try:
                 api = self.get_api()
-                order_id = subscription.pk
+                order_id = subscriptions[0].pk
                 currency = CurrencySettings.get_currency_iso_code(customer.currency)
                 api.subscribe(subject, order_id, price, currency, smarty_tariff.pk)
                 ExternalBillingIntegration(self.billing_base_url).add_additional_service_subscription(customer, smarty_tariff)
             except Exception as e:
-                subscription.delete()
-                api.unsubscribe(subject)
+                subscriptions[0].delete()
                 raise ExternalApiException(repr(e))
 
-        if not self.ignore_customer_balance_check and not skip_transaction_creation:
-            # WARN: BALANCE CHANGED
-            template = LocaleString.get_string(customer.client, BackendStrings.tariff_activation_id)
-            buy_tariff(customer, smarty_tariff, price, "external_billing_integration", template.format(id=smarty_tariff))
-        elif not dont_assign_tariff:
-            tariff_compat = get_subject_tariff_compat(subject)
-            tariff_compat.assign(smarty_tariff)
 
 external_api.registry.add('external_billing_integration', CinemaStartCustomApiClient)
