@@ -132,12 +132,18 @@ class CinemaStartCustomApiClient(CinemaStartApiClient):
         subject - Передаваемый объект аккаунта или пользователя
         smarty_tariff - Объект тарифа
         """
+        
+        """Получаем пользователя из переданного объекта"""
         customer = self._customer_from_subject(subject)
+
+        """Получаем стоимость тарифа"""
         price = float(smarty_tariff.price)
 
+        """Проверяем подписки пользователя"""
         tariffs = get_video_api_full_tariffs(self.api_config)
         subscriptions = TariffSubscription.active_by_subject(subject).filter(tariff__in=tariffs)
 
+        """Если это первая подписка пользователя, то добавляем её во внешний биллинг"""
         if len(subscriptions) == 1:
             try:
                 api = self.get_api()
