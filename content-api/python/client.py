@@ -66,24 +66,23 @@ class SmartyContentAPI(object):
         return params_list
 
 # VIDEO
-    def video_create(self, name, rating, **kwargs):
+    def video_create(self, name, **kwargs):
         params = {
             'name': name,
-            'rating': rating,
         }
         fields = [
             'name_lang1', 'name_lang2', 'name_lang3', 'name_lang4', 'name_lang5', 'name_orig',
-            'description', 'description_lang1', 'description_lang2', 'description_lang3', 
-            'description_lang4', 'description_lang5', 'year', 'countries', 'countries_lang1', 
-            'countries_lang2', 'countries_lang3', 'countries_lang4', 'countries_lang5', 
-            'director', 'director_lang1', 'director_lang2', 'director_lang3', 'director_lang4', 
-            'director_lang5', 'genres_kinopoisk', 'uri', 'language', 'language_lang1', 
-            'language_lang2', 'language_lang3', 'language_lang4', 'language_lang5', 'ext_id', 
-            'premiere_date', 'published_from', 'published_to', 'copyright_holder', 
-            'external_api_config', 'price_category', 'video_provider', 'genres', 'stream_services', 
+            'description', 'description_lang1', 'description_lang2', 'description_lang3',
+            'description_lang4', 'description_lang5', 'year', 'countries', 'countries_lang1',
+            'countries_lang2', 'countries_lang3', 'countries_lang4', 'countries_lang5',
+            'director', 'director_lang1', 'director_lang2', 'director_lang3', 'director_lang4',
+            'director_lang5', 'genres_kinopoisk', 'uri', 'language', 'language_lang1',
+            'language_lang2', 'language_lang3', 'language_lang4', 'language_lang5', 'ext_id',
+            'premiere_date', 'published_from', 'published_to', 'copyright_holder',
+            'external_api_config', 'price_category', 'video_provider', 'genres', 'stream_services',
             'tariffs', 'actors_set', 'available_on', 'package_videos', 'kinopoisk_rating',
-            'imdb_rating', 'average_customers_rating', 'duration', 'parent_control', 
-            'is_announcement', 'kinopoisk_id'
+            'imdb_rating', 'average_customers_rating', 'duration', 'parent_control',
+            'is_announcement', 'kinopoisk_id', 'rating'
         ]
         params_list = self._format_params(params, fields, kwargs)
         return self._api_request('/content/api/video/create/', params_list)
@@ -100,8 +99,8 @@ class SmartyContentAPI(object):
             'vid': vid
         }
         fields = [
-            'episode_id', 'name_lang1', 'name_lang2', 'name_lang3', 'name_lang4', 
-            'name_lang5', 'filename', 'duration', 'is_trailer', 'ext_id', 'sort_after_vfid', 
+            'episode_id', 'name_lang1', 'name_lang2', 'name_lang3', 'name_lang4',
+            'name_lang5', 'filename', 'duration', 'is_trailer', 'ext_id', 'sort_after_vfid',
             'quality'
         ]
         params_list = self._format_params(params, fields, kwargs)
@@ -116,13 +115,13 @@ class SmartyContentAPI(object):
     def video_modify(self, id, **kwargs):
         params = {'id': id}
         fields = [
-            'load_meta', 'kinopoisk_id', 'name_lang1', 'name_lang2', 'name_lang3', 
-            'name_lang4', 'name_lang5', 'name_orig', 'director', 'director_lang1', 
-            'director_lang2', 'director_lang3', 'director_lang4', 'director_lang5', 
-            'countries', 'countries_lang1', 'countries_lang2', 'countries_lang3', 
-            'countries_lang4', 'countries_lang5', 'description', 'description_lang1', 
-            'description_lang2', 'description_lang3', 'description_lang4', 'description_lang5', 
-            'year', 'poster_url', 'screenshot_url', 'actors_set', 'genres_kinopoisk', 
+            'load_meta', 'kinopoisk_id', 'name_lang1', 'name_lang2', 'name_lang3',
+            'name_lang4', 'name_lang5', 'name_orig', 'director', 'director_lang1',
+            'director_lang2', 'director_lang3', 'director_lang4', 'director_lang5',
+            'countries', 'countries_lang1', 'countries_lang2', 'countries_lang3',
+            'countries_lang4', 'countries_lang5', 'description', 'description_lang1',
+            'description_lang2', 'description_lang3', 'description_lang4', 'description_lang5',
+            'year', 'poster_url', 'screenshot_url', 'actors_set', 'genres_kinopoisk',
             'kinopoisk_rating', 'imdb_rating', 'rating', 'duration'
         ]
         params_list = self._format_params(params, fields, kwargs)
@@ -131,7 +130,7 @@ class SmartyContentAPI(object):
     def videofile_modify(self, id, **kwargs):
         params = {'id': id}
         fields = [
-            'name', 'name_lang1', 'name_lang2', 'name_lang3', 'name_lang4', 
+            'name', 'name_lang1', 'name_lang2', 'name_lang3', 'name_lang4',
             'name_lang5', 'filename', 'is_trailer', 'duration', 'episode_id', 'quality'
         ]
         params_list = self._format_params(params, fields, kwargs)
@@ -144,7 +143,7 @@ class SmartyContentAPI(object):
             'vid': vid
         }
         fields = [
-            'name_lang1', 'name_lang2', 'name_lang3', 
+            'name_lang1', 'name_lang2', 'name_lang3',
             'name_lang4', 'name_lang5', 'sort_after_sid'
         ]
         params_list = self._format_params(params, fields, kwargs)
@@ -161,7 +160,7 @@ class SmartyContentAPI(object):
             'season_id': season_id
         }
         fields = [
-            'name', 'name_lang1', 'name_lang2', 'name_lang3', 
+            'name', 'name_lang1', 'name_lang2', 'name_lang3',
             'name_lang4', 'name_lang5', 'sort_after_sid'
         ]
         params_list = self._format_params(params, fields, kwargs)
@@ -193,9 +192,9 @@ class SmartyContentAPI(object):
             'episode_id': episode_id
         }
         fields = [
-            'name', 'name_lang1', 'name_lang2', 'name_lang3', 'name_lang4', 
-            'name_lang5', 'description', 'description_lang1', 'description_lang2', 
-            'description_lang3', 'description_lang4', 'description_lang5', 'duration', 
+            'name', 'name_lang1', 'name_lang2', 'name_lang3', 'name_lang4',
+            'name_lang5', 'description', 'description_lang1', 'description_lang2',
+            'description_lang3', 'description_lang4', 'description_lang5', 'duration',
             'sort_after_eid'
         ]
         params_list = self._format_params(params, fields, kwargs)
@@ -209,15 +208,15 @@ class SmartyContentAPI(object):
             'recording_days': 0
         }
         fields = [
-            'name_lang1', 'name_lang2', 'name_lang3', 'name_lang4', 'name_lang5', 
-            'hbb_channel_pid', 'uri', 'url_prefix', 'multicast_address', 
-            'secondary_multicast_address', 'id_for_stream_service', 'comment', 
-            'version', 'option1', 'option2', 'option3', 'telemeter_account_name', 
-            'telemeter_tmsec_name', 'telemeter_cat_id', 'telemeter_vc_id', 
-            'telemeter_vc_version', 'mediahills_id', 'pause_live_tv_shift', 'lcn_number', 
-            'recording_days', 'telemeter', 'aspect_ratio', 'show_in_all', 'parent_control', 
-            'enabled', 'display_on_site', 'category', 'epg_channel', 'copyright_holder', 
-            'price_category', 'sort_after_cid', 'additional_categories', 'tariffs', 
+            'name_lang1', 'name_lang2', 'name_lang3', 'name_lang4', 'name_lang5',
+            'hbb_channel_pid', 'uri', 'url_prefix', 'multicast_address',
+            'secondary_multicast_address', 'id_for_stream_service', 'comment',
+            'version', 'option1', 'option2', 'option3', 'telemeter_account_name',
+            'telemeter_tmsec_name', 'telemeter_cat_id', 'telemeter_vc_id',
+            'telemeter_vc_version', 'mediahills_id', 'pause_live_tv_shift', 'lcn_number',
+            'recording_days', 'telemeter', 'aspect_ratio', 'show_in_all', 'parent_control',
+            'enabled', 'display_on_site', 'category', 'epg_channel', 'copyright_holder',
+            'price_category', 'sort_after_cid', 'additional_categories', 'tariffs',
             'stream_services', 'hbb_providers'
         ]
         params_list = self._format_params(params, fields, kwargs)
@@ -271,9 +270,9 @@ class SmartyContentAPI(object):
     def radio_create(self, name, **kwargs):
         params = {'name': name}
         fields = [
-            'name_lang1', 'name_lang2', 'name_lang3', 'name_lang4', 'name_lang5', 
-            'enabled', 'tariffs', 'uri', 'description', 'description_lang1', 
-            'description_lang2', 'description_lang3', 'description_lang4', 
+            'name_lang1', 'name_lang2', 'name_lang3', 'name_lang4', 'name_lang5',
+            'enabled', 'tariffs', 'uri', 'description', 'description_lang1',
+            'description_lang2', 'description_lang3', 'description_lang4',
             'description_lang5', 'radio_channel'
         ]
         params_list = self._format_params(params, fields, kwargs)
@@ -301,10 +300,10 @@ class SmartyContentAPI(object):
     def camera_create(self, name, **kwargs):
         params = {'name': name}
         fields = [
-            'name_lang1', 'name_lang2', 'name_lang3', 'name_lang4', 'name_lang5', 
-            'category', 'additional_categories', 'enabled', 'sort_after_cid', 'epg_channel', 
-            'tariffs', 'stream_services', 'uri', 'url_prefix', 'price_category', 
-            'multicast_address', 'secondary_multicast_address', 'id_for_stream_service', 
+            'name_lang1', 'name_lang2', 'name_lang3', 'name_lang4', 'name_lang5',
+            'category', 'additional_categories', 'enabled', 'sort_after_cid', 'epg_channel',
+            'tariffs', 'stream_services', 'uri', 'url_prefix', 'price_category',
+            'multicast_address', 'secondary_multicast_address', 'id_for_stream_service',
             'comment', 'option1', 'option2', 'option3'
         ]
         params_list = self._format_params(params, fields, kwargs)
@@ -313,8 +312,8 @@ class SmartyContentAPI(object):
     def camera_modify(self, camera_id, **kwargs):
         params = {'camera_id': camera_id}
         fields = [
-            'name', 'name_lang1', 'name_lang2', 'name_lang3', 'name_lang4', 
-            'name_lang5', 'enabled', 'tariffs', 'stream_services', 'uri', 
+            'name', 'name_lang1', 'name_lang2', 'name_lang3', 'name_lang4',
+            'name_lang5', 'enabled', 'tariffs', 'stream_services', 'uri',
             'url_prefix', 'multicast_address', 'price_category'
         ]
         params_list = self._format_params(params, fields, kwargs)
@@ -330,12 +329,12 @@ class SmartyContentAPI(object):
     def actor_create(self, **kwargs):
         params = {}
         fields = [
-            'name', 'name_lang1', 'name_lang2', 'name_lang3', 'name_lang4', 
-            'name_lang5', 'birthdate', 'gender', 'country', 'country_lang1', 
-            'country_lang2', 'country_lang3', 'country_lang4', 'country_lang5', 
-            'profession', 'profession_lang1', 'profession_lang2', 'profession_lang3', 
-            'profession_lang4', 'profession_lang5', 'biography', 'biography_lang1', 
-            'biography_lang2', 'biography_lang3', 'biography_lang4', 'biography_lang5', 
+            'name', 'name_lang1', 'name_lang2', 'name_lang3', 'name_lang4',
+            'name_lang5', 'birthdate', 'gender', 'country', 'country_lang1',
+            'country_lang2', 'country_lang3', 'country_lang4', 'country_lang5',
+            'profession', 'profession_lang1', 'profession_lang2', 'profession_lang3',
+            'profession_lang4', 'profession_lang5', 'biography', 'biography_lang1',
+            'biography_lang2', 'biography_lang3', 'biography_lang4', 'biography_lang5',
             'name_orig', 'movie_db_id'
         ]
         params_list = self._format_params(params, fields, kwargs)
@@ -350,7 +349,7 @@ class SmartyContentAPI(object):
 
 
 api = SmartyContentAPI(base_url='http://smarty.example.com/', client_id=1, api_key='top secret')
-#print(api.video_create('baruto_6', 0, kinopoisk_rating=10, year=2022, kinopoisk_id=123))
+#print(api.video_create('baruto_6', kinopoisk_rating=10, year=2022, kinopoisk_id=123))
 #print(api.season_create('season3', '316225', sort_after_sid=13093))
 #print(api.episode_create(316225, '1', season_id=13093))
 #print(api.videofile_create('file_1', 316225, episode_id=254950))
