@@ -15,18 +15,19 @@ import logging
 import requests
 
 from urllib.parse import urljoin
-from billing.models import CustomerTransaction
+from django.utils.translation import gettext_lazy as _
 
 import external_api.registry
 from billing.api_client import SmartyBilling, SmartyBillingErrorBalance, SmartyBillingErrorTariffAlreadyActive
 from external_api.exceptions import ExternalApiException
 from tvmiddleware.api_base import TVMiddlewareApiParams
-from tvmiddleware.billing_helpers import CustomerAssignTariff, CustomerBillingCompat, CustomerTariffService, SubjectSubscriptionService, SubscriptionCreator
+from tvmiddleware.billing_helpers import CustomerTariffService, SubjectSubscriptionService
+from tvmiddleware.exceptions import CustomerAssignTariffBalanceError
 from tvmiddleware.models import Account, Customer, Tariff
 
 from external_api.objects import AccountRegisterResponse, TariffAssignResponse
 from tvmiddleware.models import AccountHelper, ClientPlayDevice
-
+from tvmiddleware.billing_helpers import activation_price
 from tvmiddleware.register import RegisterParams, RegisterProcess
 
 
@@ -195,11 +196,12 @@ class ExampleApiClient(SmartyBilling):
         response.status = AccountRegisterResponse.STATUS_NEED_TO_CREATE
         return response
 
-    def customer_assign_nonbasic_tariff(self, customer: Customer, tariff: Tariff):
+    def customer_assign_nonbasic_tariff(self, customer: Customer, tariff: Tariff, is_free: bool=False):
         """Подключает тариф во внешней системе (используются только дополнительные тарифы).
 
         @param customer: Объект абонента.
         @param tariff: Объект тарифа.
+        @param is_free: Объект тарифа.
         """
 
         """Получение внешнего id тарифа из смарти"""
@@ -218,33 +220,16 @@ class ExampleApiClient(SmartyBilling):
             raise SmartyBillingErrorTariffAlreadyActive
 
         """Проверяем баланс кастомера"""
-        customer_tariff_assign = CustomerAssignTariff(customer, tariff)
-        price = customer_tariff_assign._get_activation_price()
-        if customer_tariff_assign._get_subject_balance() < price:
-            raise SmartyBillingErrorBalance()
+        price = activation_price(tariff, customer)
+
+        if not is_free and customer.balance() < price:
+            raise CustomerAssignTariffBalanceError(_("Customer's balance is less than activation price"))
 
         """Отправляем запрос на подключение тарифа во внешний биллинг"""
         self.hydra_api.create_subscription(external_id_tariff, external_id_customer)
-
+        
         """В случае подключения тарифа во внешнем биллинге подключаем тариф в смарти"""
-        client = customer.client
-        """Проверка типа логики биллинга
-        Отображается на странице настроек Client раздел 'Внутренний биллинг'
-        """
-        if not client.use_new_billing_logic:
-            customer_tariff_assign = CustomerAssignTariff(customer, tariff)
-            customer_tariff_assign.assign_tariff()
-        else:
-            subscription_creator = SubscriptionCreator(tariff, customer)
-            sub = subscription_creator.create()
-            subscription_creator.notify()
-            CustomerTransaction(
-                amount=-sub.price,
-                customer=customer,
-                status=CustomerTransaction.STATUS_PROCESSED,
-                source=CustomerTransaction.SOURCE_INTERNAL,
-            ).save()
-            CustomerBillingCompat(customer).charge_inactive_accounts()
+        SubjectSubscriptionService(customer).subscribe_with_default_parameters(tariff, is_free=is_free)
 
         return TariffAssignResponse()
 
