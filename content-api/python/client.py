@@ -81,8 +81,8 @@ class SmartyContentAPI(object):
             'premiere_date', 'published_from', 'published_to', 'copyright_holder',
             'external_api_config', 'price_category', 'video_provider', 'genres', 'stream_services',
             'tariffs', 'actors_set', 'available_on', 'package_videos', 'kinopoisk_rating',
-            'imdb_rating', 'average_customers_rating', 'duration', 'parent_control',
-            'is_announcement', 'kinopoisk_id', 'rating'
+            'imdb_rating', 'average_customers_rating', 'duration', 'parent_control', 
+            'is_announcement', 'is_season', 'kinopoisk_id', 'rating'
         ]
         params_list = self._format_params(params, fields, kwargs)
         return self._api_request('/content/api/video/create/', params_list)
@@ -115,14 +115,18 @@ class SmartyContentAPI(object):
     def video_modify(self, id, **kwargs):
         params = {'id': id}
         fields = [
-            'load_meta', 'kinopoisk_id', 'name_lang1', 'name_lang2', 'name_lang3',
-            'name_lang4', 'name_lang5', 'name_orig', 'director', 'director_lang1',
-            'director_lang2', 'director_lang3', 'director_lang4', 'director_lang5',
-            'countries', 'countries_lang1', 'countries_lang2', 'countries_lang3',
-            'countries_lang4', 'countries_lang5', 'description', 'description_lang1',
-            'description_lang2', 'description_lang3', 'description_lang4', 'description_lang5',
-            'year', 'poster_url', 'screenshot_url', 'actors_set', 'genres_kinopoisk',
-            'kinopoisk_rating', 'imdb_rating', 'rating', 'duration'
+            'load_meta', 'kinopoisk_id', 'name_lang1', 'name_lang2', 'name_lang3', 'name_lang4',
+            'name_lang5', 'name_orig', 'description', 'description_lang1', 'description_lang2', 'description_lang3', 
+            'description_lang4', 'description_lang5', 'year', 'countries', 'countries_lang1', 
+            'countries_lang2', 'countries_lang3', 'countries_lang4', 'countries_lang5', 
+            'director', 'director_lang1', 'director_lang2', 'director_lang3', 'director_lang4', 
+            'director_lang5', 'genres_kinopoisk', 'uri', 'language', 'language_lang1', 
+            'language_lang2', 'language_lang3', 'language_lang4', 'language_lang5', 'ext_id', 
+            'premiere_date', 'published_from', 'published_to', 'copyright_holder', 
+            'external_api_config', 'price_category', 'video_provider', 'genres', 'stream_services', 
+            'tariffs', 'actors_set', 'available_on', 'package_videos', 'kinopoisk_rating',
+            'imdb_rating', 'average_customers_rating', 'duration', 'parent_control', 
+            'is_announcement', 'is_season', 'poster_url', 'screenshot_url', 'rating'
         ]
         params_list = self._format_params(params, fields, kwargs)
         return self._api_request('/content/api/video/modify/', params_list)
