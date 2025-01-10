@@ -147,17 +147,24 @@ class ExampleApiClient(SmartyBilling):
             ip: str,
             device_uid: str,
             device_model: str,
-            params: TVMiddlewareApiParams, **kwargs
+            params: TVMiddlewareApiParams,
+            *args,
+            **kwargs
     ) -> str:
-        """Проверка статуса аккаунта во внешнем биллинге.
+        """
+        Проверка статуса аккаунта во внешнем биллинге.
         При ошибке проверки нужно кидать исключение ExternalApiException.
-        :param account: объект аутентифицированного аккаунта, от лица которого осуществляется запрос к методу /login
-        или /account_status,
-        :param ip: ip-адрес источника запроса к методу /login или /account_status,
-        :param device_uid: uid устройства, переданный в метод /login или /account_status,
-        :param device_model: модель устройства, переданная в метод /login или /account_status,
-        :param params: объект содержащий полную информацию о запросе к методу /login или /account_status
-        :returns: str
+
+        @param account: Объект аутентифицированного аккаунта, от лица которого осуществляется запрос к методу /login
+        или /account_status.
+        @param ip: ip-адрес источника запроса к методу /login или /account_status.
+        @param device_uid: uid устройства, переданный в метод /login или /account_status.
+        @param device_model: Модель устройства, переданная в метод /login или /account_status.
+        @param params: Объект содержащий полную информацию о запросе к методу /login или /account_status.
+        @param *args: Дополнительные позиционные аргументы.
+        @param **kwargs: Дополнительные именованные аргументы.
+
+        @return: Результат проверки аккаунта.
         """
 
         # Проверка считается успешной если не возникло исключение ExternalApiException
@@ -172,13 +179,16 @@ class ExampleApiClient(SmartyBilling):
             raise ExternalApiException('check failed')
 
     def register_account_new(
-            self, register_params: RegisterParams, params: TVMiddlewareApiParams, client_play_device: ClientPlayDevice
+            self, register_params: RegisterParams, params: TVMiddlewareApiParams, client_play_device: ClientPlayDevice,
+            *args, **kwargs
     ) -> AccountRegisterResponse:
         """Регистрация аккаунта во внешнем биллинге.
 
         @param register_params: Параметры регистрации.
         @param params: Параметры API.
         @param client_play_device: Тип устройства.
+        @param *args: Дополнительные позиционные аргументы.
+        @param **kwargs: Дополнительные именованные аргументы.
 
         @return: Результат регистрации.
         """
@@ -196,12 +206,17 @@ class ExampleApiClient(SmartyBilling):
         response.status = AccountRegisterResponse.STATUS_NEED_TO_CREATE
         return response
 
-    def customer_assign_nonbasic_tariff(self, customer: Customer, tariff: Tariff, is_free: bool=False):
+    def customer_assign_nonbasic_tariff(
+        self, customer: Customer, tariff: Tariff, is_free: bool=False,
+        *args, **kwargs
+    ):
         """Подключает тариф во внешней системе (используются только дополнительные тарифы).
 
         @param customer: Объект абонента.
         @param tariff: Объект тарифа.
         @param is_free: Объект тарифа.
+        @param *args: Дополнительные позиционные аргументы.
+        @param **kwargs: Дополнительные именованные аргументы.
         """
 
         """Получение внешнего id тарифа из смарти"""
@@ -233,11 +248,13 @@ class ExampleApiClient(SmartyBilling):
 
         return TariffAssignResponse()
 
-    def customer_unassign_nonbasic_tariff(self, customer: Customer, tariff: Tariff):
+    def customer_unassign_nonbasic_tariff(self, customer: Customer, tariff: Tariff, *args, **kwargs):
         """Отключает дополнительный тариф.
 
         @param customer: Объект абонента.
         @param tariff: Объект тарифа.
+        @param *args: Дополнительные позиционные аргументы.
+        @param **kwargs: Дополнительные именованные аргументы.
         """
 
         """Получение внешнего id тарифа из смарти"""
