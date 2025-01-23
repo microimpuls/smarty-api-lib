@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """Additional re module required for regular expressions."""
+import datetime
+import logging
 import re
 try:
     from client import SmartyContentAPI
@@ -11,8 +13,11 @@ except ImportError:
 SERVER_HOST = 'http://127.0.0.1:8000'
 API_KEY = 'api_key'  # Content API key
 CLIENT_ID = 1
-VIDEO_ID = 1
+VIDEO_ID = 1  # ID for sync_video(id: int) method
 VIDEO_FILE_REGEX = r'^Сезон (\d+) Серия (\d+)$'
+
+# if True videos that already have seasons but have no episodes or vice versa will be skipped.
+CAREFUL_DUBLICATES_CHECK = True
 
 
 class ParseError(Exception):
@@ -51,7 +56,7 @@ class VideoFile(object):
         self.name = name
         self.vid = vid
         self.episode_id = episode_id
-        self.duration = duration//60
+        self.duration = duration // 60
 
     def modify(self):
         api.videofile_modify(
@@ -65,23 +70,7 @@ class SyncContent(object):
         self.api = api
         self.seasons = {}
         self.episodes = {}
-
-    def get_pages(self, limit: int, count: int) -> int:
-        pages = count//limit
-        if count % limit != 0:
-            pages += 1
-        return pages
-
-    def is_updated(self, video: dict) -> bool:
-        return video['has_seasons'] and video['has_episodes']
-
-    def parse_vf_name(self, vf_name: str):
-        match = re.match(VIDEO_FILE_REGEX, vf_name)
-        if match and len(match.group(0)) == len(vf_name):
-            season_number = int(match.group(1))
-            episode_number = int(match.group(2))
-            return season_number, episode_number
-        raise ParseError
+        self.total_updated = 0
 
     def create_season(self, season_number: int, vf_vid: int):
         if season_number not in self.seasons.keys():
@@ -101,6 +90,14 @@ class SyncContent(object):
             self.episodes[vf.name] = e.create()
         vf.episode_id = self.episodes[vf.name]
 
+    def parse_vf_name(self, vf_name: str):
+        match = re.match(VIDEO_FILE_REGEX, vf_name)
+        if match and len(match.group(0)) == len(vf_name):
+            season_number = int(match.group(1))
+            episode_number = int(match.group(2))
+            return season_number, episode_number
+        raise ParseError
+
     def update_videofile(self, vf: dict, vid: int) -> bool:
         vf_obj = VideoFile(
             self.api,
@@ -112,84 +109,117 @@ class SyncContent(object):
         try:
             season_number, episode_number = self.parse_vf_name(vf_obj.name)
         except ParseError:
-            print('WARN: Parsing error video_id={0}, videofile_id={1}'.format(
-                vid, vf_obj.id
-            ))
+            log_ctx = {
+                'video_id': vid,
+                'videofile_name': vf_obj.name,
+                'videofile_id': vf_obj.id,
+            }
+            logging.warning('videofile name parsing error', extra={'ctx': log_ctx})
             return False
         self.create_season(season_number, vf_obj.vid)
         self.create_episode(season_number, episode_number, vf_obj)
         vf_obj.modify()
         return True
 
+    def try_to_process_videofiles(self, video: dict) -> bool:
+        video_files = video['files']
+        if not video_files:
+            return False
+
+        video_id = video['id']
+        has_updations = False
+        for vf in video_files:
+            is_video_updated = self.update_videofile(vf, video_id)
+            if is_video_updated:
+                has_updations = True
+        return has_updations
+
+    def set_video_is_season_status(self, video: dict, is_season: bool):
+        api.video_modify(video['id'], is_season=is_season)
+
     def update_content(self, videos: list):
         for video in videos:
-            self.seasons = {}
-            self.episodes = {}
-            if self.is_updated(video):
-                continue
+            self.update_video(video)
 
-            video_files = video['files']
-            is_success = all(self.update_videofile(vf, video['id']) for vf in video_files)
+    def init_dicts_to_check_no_dublication(self):
+        self.seasons = {}
+        self.episodes = {}
 
-            if video_files:
-                if is_success:
-                    print('Video id={} updated successfully'.format(video['id']))
-                else:
-                    print('Video id={} update failed'.format(video['id']))
+    def is_updated(self, video: dict) -> bool:
+        if CAREFUL_DUBLICATES_CHECK:
+            return video['has_seasons'] or video['has_episodes']
+        return video['has_seasons'] and video['has_episodes']
 
-    def update_video_content(self, videos: list, video_id: int) -> bool:
+    def update_video(self, video: dict) -> bool:
         """
-        Возвращает True, если указанный VIDEO_ID найден
+        Returns True if video sucessfully updated
         """
-        for video in videos:
-            if video['id'] != video_id:
-                continue
-            self.seasons = {}
-            self.episodes = {}
-            if self.is_updated(video):
-                return True
+        log_ctx = {'video_id': video['id']}
+        if self.is_updated(video):
+            logging.debug('already updated', extra={'ctx': log_ctx})
+            return False
 
-            video_files = video['files']
-            is_success = all(self.update_videofile(vf, video['id']) for vf in video_files)
+        self.init_dicts_to_check_no_dublication()
 
-            if video_files:
-                if is_success:
-                    print('Video id={} updated successfully'.format(video['id']))
-                else:
-                    print('Video id={} update failed'.format(video['id']))
-            return True
+        is_successfully_updated = self.try_to_process_videofiles(video)
+        if is_successfully_updated:
+            self.set_video_is_season_status(video, True)
+            self.total_updated += 1
+            logging.debug('success', extra={'ctx': log_ctx})
+        else:
+            logging.warning('failed', extra={'ctx': log_ctx})
 
-        return False
+        return is_successfully_updated
 
-    def load_data(self):
-        limit = 100
-        response = self.api.video_list(page=1, limit=limit)
-        self.update_content(response['videos'])
-        if response['count'] > limit:
-            pages = self.get_pages(limit, response['count'])
-            for i in range(2, pages+1):
-                response = self.api.video_list(page=i, limit=limit)
-                self.update_content(response['videos'])
+    def sync_all_videos(self):
+        self.total_updated = 0
+        log_ctx = {'client_id': CLIENT_ID}
+        logging.info('start', extra={'ctx': log_ctx})
 
-    def load_video(self):
-        """
-        Обработка сериала по VIDEO_ID
-        """
         limit = 100
         page = 1
         while True:
             response = self.api.video_list(page=page, limit=limit)
-            updated = self.update_video_content(response['videos'], VIDEO_ID)
             if not response['videos']:
-                print('Error: video not found')
                 break
-            if updated:
-                break
+            self.update_content(response['videos'])
             page += 1
+        log_ctx.update(updated_videos_count=self.total_updated)
+        logging.info('finish', extra={'ctx': log_ctx})
+
+    def get_video(self, video_id: int) -> 'dict|None':
+        limit = 100
+        page = 1
+        while True:
+            response = self.api.video_list(page=page, limit=limit)
+            if not response['videos']:
+                break
+            for video in response['videos']:
+                if video['id'] == video_id:
+                    return video
+            page += 1
+        return None
+
+    def sync_video(self, video_id: int):
+        log_ctx = {'client_id': CLIENT_ID, 'video_id': video_id}
+        logging.info('start', extra={'ctx': log_ctx})
+
+        video = self.get_video(video_id)
+        if video:
+            self.update_video(video)
+        else:
+            logging.warning('video does not exist', extra={'ctx': log_ctx})
 
 
 if __name__ == '__main__':
+    logging.basicConfig(
+        level=logging.DEBUG,
+        filename=f'sync_content_{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.log',
+        filemode='w',
+        format='%(asctime)s [%(levelname)s] %(funcName)s - %(message)s - params=%(ctx)s',
+    )
     api = SmartyContentAPI(SERVER_HOST, CLIENT_ID, API_KEY)
     sync_content = SyncContent(api)
-    sync_content.load_video()  # обработка одного видео по VIDEO_ID
-    sync_content.load_data()
+    # Uncomment what you need
+    # sync_content.sync_video(VIDEO_ID)  # processing by VIDEO_ID
+    # sync_content.sync_all_videos()   # processing all videos
