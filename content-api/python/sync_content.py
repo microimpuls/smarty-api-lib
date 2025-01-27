@@ -1,6 +1,13 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-"""Additional re module required for regular expressions."""
+"""
+Sync all videos: python3 sync_content.py
+
+Sync videos by id: python3 sync_content.py --video 1
+
+Or sync some videos by id: python3 sync_content.py --video 1 2 3 4 5 6
+"""
+import argparse
 import datetime
 import logging
 import re
@@ -220,6 +227,14 @@ if __name__ == '__main__':
     )
     api = SmartyContentAPI(SERVER_HOST, CLIENT_ID, API_KEY)
     sync_content = SyncContent(api)
-    # Uncomment what you need
-    # sync_content.sync_video(VIDEO_ID)  # processing by VIDEO_ID
-    # sync_content.sync_all_videos()   # processing all videos
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--video', nargs='+', type=int, help='video ids list separated by space')
+    args = parser.parse_args()
+
+    video_ids = args.video
+    if video_ids:
+        for video_id in video_ids:
+            sync_content.sync_video(video_id)
+    else:
+        sync_content.sync_all_videos()
