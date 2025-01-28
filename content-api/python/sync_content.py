@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """
+You need to set SERVER_HOST, API_KEY and CLIENT_ID params in code before run it.
+
 Sync all videos: python3 sync_content.py
 
 Sync videos by id: python3 sync_content.py --video 1
@@ -20,7 +22,6 @@ except ImportError:
 SERVER_HOST = 'http://127.0.0.1:8000'
 API_KEY = 'api_key'  # Content API key
 CLIENT_ID = 1
-VIDEO_ID = 1  # ID for sync_video(id: int) method
 VIDEO_FILE_REGEX = r'^Сезон (\d+) Серия (\d+)$'
 
 # if True videos that already have seasons but have no episodes or vice versa will be skipped.
