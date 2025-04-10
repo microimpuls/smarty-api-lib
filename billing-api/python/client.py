@@ -75,15 +75,22 @@ class SmartyBillingAPI(object):
         """ Создание кастомера
         """
         params = {}
-        fields = [
+        fields = {
             'firstname', 'middlename', 'lastname', 'birthdate',
             'passport_number', 'passport_series', 'passport_issue_date', 'passport_issued_by',
             'postal_address_street', 'postal_address_bld', 'postal_address_apt',
             'postal_address_zip', 'billing_address_street', 'billing_address_bld',
             'billing_address_apt', 'billing_address_zip',
             'mobile_phone_number', 'phone_number_1', 'phone_number_2', 'fax_phone_number',
-            'email', 'company_name', 'comment', 'auto_activation_period',
-        ]
+            'email', 'company_name', 'comment', 'ext_id',
+            'send_sms',
+            'bank_account_blz', 'bank_account_bic', 'bank_account_number', 'bank_account_iban',
+            'bank_account_bank_name', 'bank_account_owner_name',
+            'contract_number', 'dealer_id',
+            'meta',
+            'send_sms_messages', 'send_email_messages',
+            'postal_address_city', 'postal_address_country'
+        }
 
         for key, value in kwargs.items():
             if key in fields:
@@ -96,6 +103,33 @@ class SmartyBillingAPI(object):
                 "You must specify firstname or lastname or middlename or comment"
             )
         return self._api_request('/billing/api/customer/create/', params)
+
+    def customer_modify(self, **kwargs):
+        params = {}
+        fields = {
+            'customer_id', 'ext_id'
+            'firstname', 'middlename', 'lastname', 'birthdate',
+            'passport_number', 'passport_series', 'passport_issue_date', 'passport_issued_by',
+            'postal_address_street', 'postal_address_bld', 'postal_address_apt',
+            'postal_address_zip', 'billing_address_street', 'billing_address_bld',
+            'billing_address_apt', 'billing_address_zip',
+            'mobile_phone_number', 'phone_number_1', 'phone_number_2', 'fax_phone_number',
+            'email', 'company_name', 'comment',
+            'bank_account_blz', 'bank_account_bic', 'bank_account_number', 'bank_account_iban',
+            'bank_account_bank_name', 'bank_account_owner_name',
+            'send_sms_messages', 'send_email_messages',
+            'meta',
+        }
+
+        for key, value in kwargs.items():
+            if key in fields:
+                params[key] = value
+
+        if 'customer_id' not in params and 'ext_id' not in params:
+            raise BillingAPIException(
+                'You must specify customer_id or ext_id of customer to modify'
+            )
+        return self._api_request('/billing/api/customer/modify/', params)
 
     def customer_info(self, customer_id):
         params = {
@@ -161,6 +195,6 @@ class SmartyBillingAPI(object):
 # print(api.customer_create(
 #     firstname='Bill',
 #     middlename='Muriel',
-#     auto_activation_period=10
+#     meta='{"my_boolean_param": true, "my_int_param": 1, "my_str_param": "something"}'
 # ))
 # api.transaction_create(customer_id=1, transaction_id=4, processed=1, amount=50)
