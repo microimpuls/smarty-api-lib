@@ -15,7 +15,7 @@ class ContentAPIException(Exception):
 class SmartyContentAPI(object):
     def __init__(self, base_url, client_id, api_key):
         """
-        :param base_url: хост smarty, например http://smarty.microimpuls.com
+        :param base_url: хост smarty, например http://smarty.example.com
         :param client_id: идентефикатор клиента
         :param api_key: ключ клиента
         """
