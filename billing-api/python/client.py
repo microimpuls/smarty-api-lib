@@ -16,7 +16,7 @@ class SmartyBillingAPI(object):
     def __init__(self, base_url, client_id, api_key):
         """
         :param base_url: хост smarty, например http://smarty.microimpuls.com
-        :param client_id: идентефикатор клиента
+        :param client_id: идентификатор клиента
         :param api_key: ключ клиента
         """
         self.base_url = base_url
@@ -189,6 +189,39 @@ class SmartyBillingAPI(object):
     def tariff_list(self):
         return self._api_request('/billing/api/tariff/list/')
 
+    def message_mass_send(self, subject: str, text: str, is_urgent: bool = True):
+        """
+        массовая рассылка сообщений всем проявлявшим активность в последнее время абонентам
+        :param subject: тема сообщения
+        :param text: текст сообщения
+        :param is_urgent: флаг срочности сообщения
+        """
+        data = self._api_request('/billing/api/account/list/')
+        params = {
+            'subject': subject,
+            'text': text,
+            'urgent': int(is_urgent)
+        }
+        accounts = data['accounts']
+        batch_size = 100
+        batch_counter = 0
+        min_last_active = datetime.datetime.today() - datetime.timedelta(weeks=2)
+        messages_sent_counter = 0
+        for account in accounts:
+            if not account['last_active'] or datetime.datetime.strptime(account['last_active'], '%Y-%m-%d') <= min_last_active:
+                continue
+            params['account_id'] = account['id']
+            response = self._api_request('billing/api/account/message/create/', params)
+            print(response)
+            if not response['error']:
+                messages_sent_counter += 1
+            if batch_counter < batch_size:
+                batch_counter += 1
+            else:
+                batch_counter = 0
+                time.sleep(0.1)
+        return messages_sent_counter
+
 
 # api = SmartyBillingAPI(base_url='http://localhost:8000/', client_id=1, api_key='top secret')
 # api.tariff_list()
@@ -198,3 +231,4 @@ class SmartyBillingAPI(object):
 #     meta='{"my_boolean_param": true, "my_int_param": 1, "my_str_param": "something"}'
 # ))
 # api.transaction_create(customer_id=1, transaction_id=4, processed=1, amount=50)
+
