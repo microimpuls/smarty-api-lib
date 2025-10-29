@@ -145,7 +145,7 @@ class SmartyBillingAPI(object):
             params['mobile_phone_number'] = mobile_phone_number
         if abonement_regexp:
             params['abonement_regexp'] = mobile_phone_number
-        return self._api_get_request('/billing/api/customer/list/', params)
+        return self._api_request('/billing/api/customer/list/', params)
     
     def customer_tariff_assign(self, customer_id, tariff_id):
         params = {
@@ -241,5 +241,6 @@ class SmartyBillingAPI(object):
 #     meta='{"my_boolean_param": true, "my_int_param": 1, "my_str_param": "something"}'
 # ))
 # api.transaction_create(customer_id=1, transaction_id=4, processed=1, amount=50)
+
 
 
