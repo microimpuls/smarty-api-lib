@@ -6,6 +6,8 @@ import base64
 import urllib.request
 import urllib.error
 import urllib
+import datetime
+import time
 
 
 class BillingAPIException(Exception):
@@ -40,12 +42,17 @@ class SmartyBillingAPI(object):
         full_url = urllib.parse.urlunparse(parsed_base_url._replace(path=path))
         return full_url
 
-    def _api_request(self, path, data=None):
+    def _api_request(self, path, post_data=None, get_data=None):
         url = self._get_full_url(path)
-        data = data or {}
-        data['client_id'] = self.client_id
-        data['signature'] = self._get_signature(data)
-        encoded_post_data = urllib.parse.urlencode(data).encode()
+        post_data = post_data or {}
+        get_data = get_data or {}
+        combined_data = post_data
+        combined_data.update(get_data)
+        post_data['client_id'] = self.client_id
+        post_data['signature'] = self._get_signature(combined_data)
+        encoded_post_data = urllib.parse.urlencode(post_data).encode()
+        encoded_get_data = urllib.parse.urlencode(get_data)
+        url = f"{url}?{encoded_get_data}"
         req = urllib.request.Request(url, encoded_post_data)
         response = urllib.request.urlopen(req)
         api_response = json.loads(response.read())
@@ -108,7 +115,7 @@ class SmartyBillingAPI(object):
         params = {}
         fields = {
             'customer_id', 'ext_id'
-            'firstname', 'middlename', 'lastname', 'birthdate',
+                           'firstname', 'middlename', 'lastname', 'birthdate',
             'passport_number', 'passport_series', 'passport_issue_date', 'passport_issued_by',
             'postal_address_street', 'postal_address_bld', 'postal_address_apt',
             'postal_address_zip', 'billing_address_street', 'billing_address_bld',
@@ -137,6 +144,16 @@ class SmartyBillingAPI(object):
         }
         return self._api_request('/billing/api/customer/info/', params)
 
+    def customer_list(self, tariff_id, mobile_phone_number=None, abonement_regexp=None):
+        params = {
+            'tariff_id': tariff_id,
+        }
+        if mobile_phone_number:
+            params['mobile_phone_number'] = mobile_phone_number
+        if abonement_regexp:
+            params['abonement_regexp'] = abonement_regexp
+        return self._api_request('/billing/api/customer/list/', post_data=None, get_data=params)
+
     def customer_tariff_assign(self, customer_id, tariff_id):
         params = {
             'customer_id': customer_id,
@@ -150,7 +167,7 @@ class SmartyBillingAPI(object):
             'tariff_id': tariff_id
         }
         return self._api_request('/billing/api/customer/tariff/remove/', params)
-    
+
     def account_info(self, abonement=None, account_id=None):
         assert any([abonement, account_id])
         params = {}
@@ -222,7 +239,6 @@ class SmartyBillingAPI(object):
                 time.sleep(0.1)
         return messages_sent_counter
 
-
 # api = SmartyBillingAPI(base_url='http://localhost:8000/', client_id=1, api_key='top secret')
 # api.tariff_list()
 # print(api.customer_create(
@@ -231,4 +247,3 @@ class SmartyBillingAPI(object):
 #     meta='{"my_boolean_param": true, "my_int_param": 1, "my_str_param": "something"}'
 # ))
 # api.transaction_create(customer_id=1, transaction_id=4, processed=1, amount=50)
-
