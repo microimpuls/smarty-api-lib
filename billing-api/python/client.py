@@ -145,6 +145,11 @@ class SmartyBillingAPI(object):
         return self._api_request('/billing/api/customer/info/', params)
 
     def customer_list(self, tariff_id, mobile_phone_number=None, abonement_regexp=None):
+        """
+        :param tariff_id: идентификатор тарифа, передается числом или списком из чисел
+        :param mobile_phone_number: мобильный номер телефона абонента
+        :param abonement_regexp: регулярное выражение для фильтрации аккаунтов.
+        """
         params = {
             'tariff_id': tariff_id,
         }
@@ -247,3 +252,4 @@ class SmartyBillingAPI(object):
 #     meta='{"my_boolean_param": true, "my_int_param": 1, "my_str_param": "something"}'
 # ))
 # api.transaction_create(customer_id=1, transaction_id=4, processed=1, amount=50)
+# api.customer_list(tariff_id=[1, 2, 3])
